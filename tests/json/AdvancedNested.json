@@ -1,0 +1,64 @@
+{
+  "jql": [
+    {
+      "field": "contacts.is_business",
+      "operator": "eq",
+      "value": "true"
+    },
+    {
+      "field": "contacts.is_business",
+      "operator": "eq",
+      "value": "false"
+    },
+    {
+      "OR": [
+        {
+          "field": "contacts.is_business",
+          "operator": "eq",
+          "value": "true"
+        },
+        {
+          "field": "contacts.is_business",
+          "operator": "eq",
+          "value": "true"
+        },
+        {
+          "field": "contacts.is_business",
+          "operator": "eq",
+          "value": "true"
+        },
+        {
+          "OR": [
+            {
+              "field": "contacts.is_business",
+              "operator": "eq",
+              "value": "true"
+            },
+            {
+              "field": "contacts.is_business",
+              "operator": "eq",
+              "value": "true"
+            },
+            [
+              {
+                "field": "contacts.is_business",
+                "operator": "eq",
+                "value": "true"
+              },
+              {
+                "field": "contacts.is_business",
+                "operator": "eq",
+                "value": "true"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "field": "contacts.is_business",
+      "operator": "eq",
+      "value": "true"
+    }
+  ]
+}

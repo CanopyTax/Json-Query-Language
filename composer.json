@@ -1,0 +1,19 @@
+{
+  "name": "canopy/jql",
+  "authors": [
+    {
+      "name": "Skyler Lewis",
+      "email": "skyler.lewis@canopytax.com"
+    }
+  ],
+  "require": {
+    "illuminate/database": "^5.2",
+    "illuminate/events": "^5.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "Canopy\\JQL\\": "src/Canopy/JQL",
+      "Test\\": "tests"
+    }
+  }
+}

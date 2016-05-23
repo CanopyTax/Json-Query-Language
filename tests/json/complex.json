@@ -1,0 +1,56 @@
+{
+  "jql": [
+    {
+      "field": "contacts.is_business",
+      "operator": "eq",
+      "value": "true"
+    },
+    {
+      "field": "contacts.is_business",
+      "operator": "eq",
+      "value": "false"
+    },
+    {
+      "OR": [
+        {
+          "field": "contacts.field2",
+          "operator": "gt",
+          "value": "9"
+        },
+        {
+          "field": "tags.field2",
+          "operator": "lt",
+          "value": "5"
+        },
+        {
+          "field": "field3",
+          "operator": "in",
+          "value": [
+            123,
+            234,
+            345
+          ]
+        },
+        {
+          "OR": [
+            {
+              "field": "field2",
+              "operator": "ne",
+              "value": "7"
+            },
+            {
+              "field": "city",
+              "operator": "beginswith",
+              "value": "pr"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "field": "contacts.is_business",
+      "operator": "eq",
+      "value": "false"
+    }
+  ]
+}
