@@ -1,19 +1,19 @@
 {
   "jql": [
     {
-      "field": "contacts.is_business",
+      "field": "mamals.is_business",
       "operator": "eq",
       "value": "true"
     },
     {
-      "field": "contacts.is_business",
+      "field": "mamals.is_business",
       "operator": "eq",
       "value": "false"
     },
     {
       "OR": [
         {
-          "field": "contacts.field2",
+          "field": "mamals.field2",
           "operator": "gt",
           "value": "9"
         },
@@ -40,7 +40,7 @@
             },
             {
               "field": "city",
-              "operator": "beginswith",
+              "operator": "eq",
               "value": "pr"
             }
           ]
@@ -48,7 +48,7 @@
       ]
     },
     {
-      "field": "contacts.is_business",
+      "field": "mamals.is_business",
       "operator": "eq",
       "value": "false"
     }

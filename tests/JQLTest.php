@@ -11,13 +11,13 @@ class JQLTest extends JQLTestCase
 	public function setUp()
 	{
 		parent::setUp();
-		$model = new TestModel();
+		$model = new Mamal();
 		$this->jql = new JQL($model);
 	}
 
 	public function testBaseLinePulse()
 	{
-		$this->convertToFluentTest('complex.json', "select * from `bobs` where `contacts`.`is_business` = ? and `contacts`.`is_business` = ? and (`contacts`.`field2` > ? or `tags`.`field2` < ? or `field3` = ? or (`field2` != ? or `city` = ?)) and `contacts`.`is_business` = ?");
+		$this->convertToFluentTest('complex.json', "select * from `bobs` where `mamals`.`is_business` = ? and `mamals`.`is_business` = ? and (`mamals`.`field2` > ? or `tags`.`field2` < ? or `mamals`.`field3` = ? or (`mamals`.`field2` != ? or `mamals`.`city` = ?)) and `mamals`.`is_business` = ?");
 	}
 
 	public function test_A_or_PB_and_CP() { //P == parentheses.
@@ -53,7 +53,7 @@ class JQLTest extends JQLTestCase
 }
 
 
-class TestModel extends Model
+class Mamal extends Model
 {
 	public $table = 'bobs';
 }

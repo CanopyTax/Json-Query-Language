@@ -64,7 +64,7 @@ class JQL
                         $this->parseJQL($item, $query);
                     });
                 } else {
-                    $query->$whery($item->field, $this->operatorMap[$item->operator], $item->value);
+                    $query = $this->buildQueryOperation($query, $whery, $item->field, $this->operatorMap[$item->operator], $item->value);
                 }
             }
 
@@ -74,6 +74,59 @@ class JQL
         return $query;
     }
 
+    /**
+     * @param $query
+     * @param $whery
+     * @param $field
+     * @param $operator
+     * @param $value
+     * @return mixed
+     * @throws \Exception
+     */
+    private function buildQueryOperation($query, $whery, $field, $operator, $value)
+    {
+        if (in_array($operator, ['beginswith', 'endswith', 'contains'])) {
+            throw new \Exception($operator . ": Not currently defined");
+        }
+
+        list($model, $field, $table) = $this->convertToModelNameAndField($field);
+
+        if ($model != $this->getModelName()) {
+//            return $this->joinWhere();
+        }
+
+        $result = $query->$whery($table.'.'.$field, $operator, $value);
+
+        return $result;
+    }
+
+    private function convertToModelNameAndField($field)
+    {
+        $explosions = explode('.', $field);
+        if (count($explosions) == 1) {
+            $table = snake_case(str_plural($this->getModelName()));
+            $field = $explosions[0];
+        } elseif (count($explosions) == 2) {
+            $table = $explosions[0];
+            $field = $explosions[1];
+        } else {
+            throw new \Exception('Format must be model.field, eg: mamals.speed');
+        }
+        $model = studly_case(str_singular($table));
+        return [$model, $field, $table];
+    }
+
+    /**
+     * Return the name of $this->model.
+     *
+     * @return string
+     */
+    public function getModelName()
+    {
+        $reflection = new \ReflectionClass($this->model);
+
+        return $reflection->getShortName();
+    }
 
     /**
      * @return Model
