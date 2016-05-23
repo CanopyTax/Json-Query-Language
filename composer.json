@@ -12,7 +12,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Canopy\\JQL\\": "src/Canopy/JQL",
+      "Canopy\\JQL\\": "src",
       "Test\\": "tests"
     }
   }
