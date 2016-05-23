@@ -5,11 +5,10 @@ data:
     - log:/data/logs
   privileged: true
 
-php:
-  image: dylanlindgren/docker-laravel-phpfpm
+sniff:
+  image: alairock/docker-php-codesniffer
   volumes_from:
     - data
-  privileged: true
 
 phpunit:
   image: dylanlindgren/docker-laravel-phpunit
