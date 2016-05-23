@@ -1,0 +1,22 @@
+data:
+  image: dylanlindgren/docker-laravel-data
+  volumes:
+    - .:/data/www/
+    - log:/data/logs
+  privileged: true
+
+php:
+  image: dylanlindgren/docker-laravel-phpfpm
+  volumes_from:
+    - data
+  privileged: true
+
+composer:
+  image: dylanlindgren/docker-laravel-composer
+  volumes_from:
+    - data
+
+artisan:
+  image: dylanlindgren/docker-laravel-artisan
+  volumes_from:
+    - data
