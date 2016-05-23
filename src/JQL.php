@@ -52,38 +52,25 @@ class JQL
                 if ($count == 0) {
                     $this->parseJQL($item->OR, $query, 'OR');
                 } else {
-                    $query->where(
-                        function ($query) use ($item) {
-                            $this->parseJQL($item->OR, $query, 'OR');
-                        }
-                    );
+                    $whery = ($binder != 'OR') ? 'where' : 'orWhere';
+                    $query->$whery(function ($query) use ($item) {
+                        $this->parseJQL($item->OR, $query, 'OR');
+                    });
                 }
             } else {
-                if ($binder == 'OR') {
-                    if (is_array($item)) {
-                        $query->orWhere(
-                            function ($query) use ($item) {
-                                $this->parseJQL($item, $query);
-                            }
-                        );
-                    } else {
-                        $query->orWhere($item->field, $this->operatorMap[$item->operator], $item->value);
-                    }
+                $whery = ($binder != 'OR') ? 'where' : 'orWhere';
+                if (is_array($item)) {
+                    $query->$whery(function ($query) use ($item) {
+                        $this->parseJQL($item, $query);
+                    });
                 } else {
-                    if (is_array($item)) {
-                        $query->where(
-                            function ($query) use ($item) {
-                                $this->parseJQL($item, $query);
-                            }
-                        );
-                    } else {
-                        $query->where($item->field, $this->operatorMap[$item->operator], $item->value);
-                    }
+                    $query->$whery($item->field, $this->operatorMap[$item->operator], $item->value);
                 }
             }
 
             $count++;
         }
+
         return $query;
     }
 

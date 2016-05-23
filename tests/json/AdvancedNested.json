@@ -1,52 +1,52 @@
 {
   "jql": [
     {
-      "field": "contacts.is_business",
+      "field": "contacts.A",
       "operator": "eq",
       "value": "true"
     },
     {
-      "field": "contacts.is_business",
+      "field": "contacts.B",
       "operator": "eq",
       "value": "false"
     },
     {
       "OR": [
         {
-          "field": "contacts.is_business",
+          "field": "contacts.C",
           "operator": "eq",
           "value": "true"
         },
         {
-          "field": "contacts.is_business",
+          "field": "contacts.D",
           "operator": "eq",
           "value": "true"
         },
         {
-          "field": "contacts.is_business",
+          "field": "contacts.E",
           "operator": "eq",
           "value": "true"
         },
         {
           "OR": [
             {
-              "field": "contacts.is_business",
+              "field": "contacts.F",
               "operator": "eq",
               "value": "true"
             },
             {
-              "field": "contacts.is_business",
+              "field": "contacts.G",
               "operator": "eq",
               "value": "true"
             },
             [
               {
-                "field": "contacts.is_business",
+                "field": "contacts.H",
                 "operator": "eq",
                 "value": "true"
               },
               {
-                "field": "contacts.is_business",
+                "field": "contacts.I",
                 "operator": "eq",
                 "value": "true"
               }
@@ -56,7 +56,7 @@
       ]
     },
     {
-      "field": "contacts.is_business",
+      "field": "contacts.J",
       "operator": "eq",
       "value": "true"
     }

@@ -17,7 +17,7 @@ class JQLTest extends JQLTestCase
 
 	public function testBaseLinePulse()
 	{
-		$this->convertToFluentTest('complex.json', "select * from `bobs` where `contacts`.`is_business` = ? and `contacts`.`is_business` = ? or (`contacts`.`field2` > ? and `tags`.`field2` < ? and `field3` = ? or (`field2` != ? and `city` = ?)) and `contacts`.`is_business` = ?");
+		$this->convertToFluentTest('complex.json', "select * from `bobs` where `contacts`.`is_business` = ? and `contacts`.`is_business` = ? and (`contacts`.`field2` > ? or `tags`.`field2` < ? or `field3` = ? or (`field2` != ? or `city` = ?)) and `contacts`.`is_business` = ?");
 	}
 
 	public function test_A_or_PB_and_CP() { //P == parentheses.
@@ -27,14 +27,14 @@ class JQLTest extends JQLTestCase
 	public function test_A_and_PB_or_CP() { //P == parentheses.
 		$this->convertToFluentTest('Aand-BorC.json', "select * from `bobs` where `contacts`.`fieldA` > ? and (`contacts`.`fieldB` > ? or `contacts`.`fieldC` > ?)");
 	}
-	
+
 	public function test_A_or_B_orPC_andDP() {
 		$this->convertToFluentTest('Aor-Bor-CandD.json', "select * from `bobs` where `contacts`.`fieldA` > ? or `contacts`.`fieldB` > ? or (`contacts`.`fieldC` > ? and `contacts`.`fieldD` > ?)");
 	}
 
 	public function test_AdvancedNested() {
 		// A and B and (C or D or E or (F OR (H and I))) and J
-		$this->convertToFluentTest('AdvancedNested.json', "select * from `bobs` where `contacts`.`is_business` = ? and `contacts`.`is_business` = ? and (`contacts`.`is_business` = ? or `contacts`.`is_business` = ? or `contacts`.`is_business` = ? or (`contacts`.`is_business` = ? or `contacts`.`is_business` = ? or (`contacts`.`is_business` = ? and `contacts`.`is_business` = ?))) and `contacts`.`is_business` = ?");
+		$this->convertToFluentTest('AdvancedNested.json', "select * from `bobs` where `contacts`.`A` = ? and `contacts`.`B` = ? and (`contacts`.`C` = ? or `contacts`.`D` = ? or `contacts`.`E` = ? or (`contacts`.`F` = ? or `contacts`.`G` = ? or (`contacts`.`H` = ? and `contacts`.`I` = ?))) and `contacts`.`J` = ?");
 	}
 
 	private function convertToFluentTest($filename, $expected)
