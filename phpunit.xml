@@ -15,4 +15,14 @@
             <directory>./tests/</directory>
         </testsuite>
     </testsuites>
+
+    <filter>
+        <whitelist>
+            <directory suffix=".php">src/</directory>
+        </whitelist>
+    </filter>
+
+    <logging>
+        <log type="coverage-html" target="testsCoverage" chartset="UTF-8" highlight="true" lowUpperBound="80" highLowerBound="95" />
+    </logging>
 </phpunit>
