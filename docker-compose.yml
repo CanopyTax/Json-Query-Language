@@ -11,12 +11,12 @@ php:
     - data
   privileged: true
 
-composer:
-  image: dylanlindgren/docker-laravel-composer
+phpunit:
+  image: dylanlindgren/docker-laravel-phpunit
   volumes_from:
     - data
 
-artisan:
-  image: dylanlindgren/docker-laravel-artisan
+composer:
+  image: dylanlindgren/docker-laravel-composer
   volumes_from:
     - data
