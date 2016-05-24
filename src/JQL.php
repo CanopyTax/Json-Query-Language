@@ -24,6 +24,10 @@ class JQL
 
     protected $joinedModels = [];
 
+    protected $approvedModels = [];
+
+    protected $modelMapping = [];
+
     public function __construct(Model $model)
     {
         $this->model = $model;
@@ -35,7 +39,6 @@ class JQL
     public function convertToFluent($json)
     {
         $json = json_decode($json);
-
         $query = $this->parseJQL($json->jql, $this->query);
 
         return $query;
@@ -109,6 +112,9 @@ class JQL
 
     private function individualQuery($query, $whery, $table, $field, $operator, $value)
     {
+        if ($operator == 'in') {
+            return $query->{$whery.'In'}($table.'.'.$field, $value);
+        }
         return $query->$whery($table.'.'.$field, $operator, $value);
     }
 
@@ -160,5 +166,21 @@ class JQL
     public function setModel($model)
     {
         $this->model = $model;
+    }
+
+    /**
+     * @return array
+     */
+    public function getApprovedModels()
+    {
+        return $this->approvedModels;
+    }
+
+    /**
+     * @param array $approvedModels
+     */
+    public function setApprovedModels(array $approvedModels)
+    {
+        $this->approvedModels = $approvedModels;
     }
 }

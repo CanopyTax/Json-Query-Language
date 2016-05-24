@@ -17,7 +17,7 @@ class JQLTest extends JQLTestCase
 
     public function testBaseLinePulse()
     {
-        $this->convertToFluentTest('complex.json', "select * from `bobs` where `bobs`.`is_business` = ? and `bobs`.`is_business` = ? and (`bobs`.`field2` > ? or `bobs`.`field2` < ? or `bobs`.`field3` = ? or (`bobs`.`field2` != ? or `bobs`.`city` = ?)) and `bobs`.`is_business` = ?");
+        $this->convertToFluentTest('complex.json', "select * from `bobs` where `bobs`.`is_business` = ? and `bobs`.`is_business` = ? and (`bobs`.`field2` > ? or `bobs`.`field2` < ? or `bobs`.`field3` in (?, ?, ?) or (`bobs`.`field2` != ? or `bobs`.`city` = ?)) and `bobs`.`is_business` = ?");
     }
 
     public function test_A_or_PB_and_CP()
@@ -35,6 +35,11 @@ class JQLTest extends JQLTestCase
         $this->convertToFluentTest('Aor-Bor-CandD.json', "select * from `bobs` where `bobs`.`fieldA` > ? or `bobs`.`fieldB` > ? or (`bobs`.`fieldC` > ? and `bobs`.`fieldD` > ?)");
     }
 
+    public function test_A_and_B_in()
+    {
+        $this->convertToFluentTest('Aand-Bin.json', "select * from `bobs` where `bobs`.`A` = ? and `bobs`.`B` in (?, ?, ?)");
+    }
+
     public function test_AdvancedNested()
     {
         // A and B and (C or D or E or (F OR (H and I))) and J
@@ -48,6 +53,12 @@ class JQLTest extends JQLTestCase
 
     public function test_advanced_join()
     {
+        $this->convertToFluentTest('AdvancedJoin.json', "select * from `bobs` inner join `birds` on `birds`.`id` = `bobs`.`bird_id` inner join `dogs` on `dogs`.`id` = `bobs`.`dog_id` inner join `cats` on `cats`.`id` = `bobs`.`cat_id` where `bobs`.`A` = ? and `bobs`.`B` = ? and (`birds`.`C` = ? or `bobs`.`D` = ? or `bobs`.`E` = ? or (`dogs`.`F` = ? or `dogs`.`G` = ? or (`cats`.`H` = ? and `cats`.`I` = ?))) and `dogs`.`J` = ?");
+    }
+
+    public function test_approved_models_to_join()
+    {
+        $this->jql->setApprovedModels(['Mamal', 'Bird', 'Dog', 'Cat']);
         $this->convertToFluentTest('AdvancedJoin.json', "select * from `bobs` inner join `birds` on `birds`.`id` = `bobs`.`bird_id` inner join `dogs` on `dogs`.`id` = `bobs`.`dog_id` inner join `cats` on `cats`.`id` = `bobs`.`cat_id` where `bobs`.`A` = ? and `bobs`.`B` = ? and (`birds`.`C` = ? or `bobs`.`D` = ? or `bobs`.`E` = ? or (`dogs`.`F` = ? or `dogs`.`G` = ? or (`cats`.`H` = ? and `cats`.`I` = ?))) and `dogs`.`J` = ?");
     }
 
