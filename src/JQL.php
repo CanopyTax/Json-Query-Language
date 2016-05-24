@@ -97,20 +97,19 @@ class JQL
 
         if ($model != $this->modelName) {
             if (!in_array($model, $this->joinedModels)) {
-                $queryResults = $query->join($table, $table.'.id', '=', $this->table.'.'.str_singular($table).'_id');
+                $this->query->join($table, $table.'.id', '=', $this->table.'.'.str_singular($table).'_id');
                 $this->individualQuery($query, $whery, $table, $field, $operator, $value);
                 $this->joinedModels[] = $model;
-                return $queryResults;
+                return $query;
             }
         }
 
-        return  $this->individualQuery($query, $whery, $table, $field, $operator, $value);
+        return $this->individualQuery($query, $whery, $table, $field, $operator, $value);
     }
 
     private function individualQuery($query, $whery, $table, $field, $operator, $value)
     {
-        $result = $query->$whery($table.'.'.$field, $operator, $value);
-        return $result;
+        return $query->$whery($table.'.'.$field, $operator, $value);
     }
 
     private function convertToModelNameAndField($field)

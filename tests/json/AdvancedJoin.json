@@ -13,7 +13,7 @@
     {
       "OR": [
         {
-          "field": "mamals.C",
+          "field": "birds.C",
           "operator": "eq",
           "value": "true"
         },
@@ -30,23 +30,23 @@
         {
           "OR": [
             {
-              "field": "mamals.F",
+              "field": "dogs.F",
               "operator": "eq",
               "value": "true"
             },
             {
-              "field": "mamals.G",
+              "field": "dogs.G",
               "operator": "eq",
               "value": "true"
             },
             [
               {
-                "field": "mamals.H",
+                "field": "cats.H",
                 "operator": "eq",
                 "value": "true"
               },
               {
-                "field": "mamals.I",
+                "field": "cats.I",
                 "operator": "eq",
                 "value": "true"
               }
@@ -56,7 +56,7 @@
       ]
     },
     {
-      "field": "mamals.J",
+      "field": "dogs.J",
       "operator": "eq",
       "value": "true"
     }
