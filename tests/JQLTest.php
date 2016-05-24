@@ -37,6 +37,10 @@ class JQLTest extends JQLTestCase
 		$this->convertToFluentTest('AdvancedNested.json', "select * from `bobs` where `bobs`.`A` = ? and `bobs`.`B` = ? and (`bobs`.`C` = ? or `bobs`.`D` = ? or `bobs`.`E` = ? or (`bobs`.`F` = ? or `bobs`.`G` = ? or (`bobs`.`H` = ? and `bobs`.`I` = ?))) and `bobs`.`J` = ?");
 	}
 
+    public function test_simple_join() {
+        $this->convertToFluentTest('SimpleJoin.json', "select * from `bobs` inner join `humans` on `humans`.`id` = `bobs`.`human_id` where `bobs`.`fieldA` > ? and `humans`.`fieldB` > ?");
+    }
+
 	private function convertToFluentTest($filename, $expected)
 	{
 		$json = $this->getJson($filename);

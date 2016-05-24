@@ -1,0 +1,14 @@
+{
+  "jql": [
+    {
+      "field": "mamals.fieldA",
+      "operator": "gt",
+      "value": "A"
+    },
+    {
+      "field": "humans.fieldB",
+      "operator": "gt",
+      "value": "B"
+    }
+  ]
+}

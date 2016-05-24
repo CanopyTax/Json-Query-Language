@@ -27,6 +27,8 @@ class JQL
     public function __construct(Model $model)
     {
         $this->model = $model;
+        $this->modelName = $this->getModelName();
+        $this->table = (isset($this->model->table)) ? $this->model->table : snake_case(str_plural($this->getModelName()));
         $this->query = $model->query();
     }
 
@@ -93,9 +95,9 @@ class JQL
 
         list($model, $field, $table) = $this->convertToModelNameAndField($field);
 
-        if ($model != $this->getModelName()) {
+        if ($model != $this->modelName) {
             if (!in_array($model, $this->joinedModels)) {
-                $queryResults = $query->join($table, $table.'.id', '=', $this->getTableName().'.'.str_singular($table).'_id');
+                $queryResults = $query->join($table, $table.'.id', '=', $this->table.'.'.str_singular($table).'_id');
                 $this->individualQuery($query, $whery, $table, $field, $operator, $value);
                 $this->joinedModels[] = $model;
                 return $queryResults;
@@ -115,17 +117,20 @@ class JQL
     {
         $explosions = explode('.', $field);
         if (count($explosions) == 1) {
-            $table = snake_case(str_plural($this->getModelName()));
+            $table = $this->table;
+            $model = $this->modelName;
             $field = $explosions[0];
         } elseif (count($explosions) == 2) {
             $table = $explosions[0];
+            $modelTable = snake_case(str_plural($this->modelName));
+            $model = studly_case(str_singular($table));
+            if ($table == $modelTable) {
+                $model = $this->modelName;
+                $table = $this->table;
+            }
             $field = $explosions[1];
         } else {
             throw new \Exception('Format must be model.field, eg: mamals.speed');
-        }
-        $model = studly_case(str_singular($table));
-        if (isset($this->model->table)) {
-            $table = $this->model->table;
         }
         return [$model, $field, $table];
     }
@@ -140,12 +145,6 @@ class JQL
         $reflection = new \ReflectionClass($this->model);
 
         return $reflection->getShortName();
-    }
-
-    private function getTableName()
-    {
-        $table = snake_case(str_plural($this->getModelName()));
-        return $table;
     }
 
     /**
