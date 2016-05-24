@@ -15,12 +15,12 @@ A single query looks like:
 
 ### Operators
 
-* `lt` = <,
-* `gt` = >,
-* `lte` = <=,
-* `gte` = >=,
-* `eq` = =,
-* `ne` = !=,
+* `lt` = `<`,
+* `gt` = `>`,
+* `lte` = `<=`,
+* `gte` = `>=`,
+* `eq` = `=`,
+* `ne` = `!=`,
 * `beginswith`
 * `endswith`
 * `contains`
