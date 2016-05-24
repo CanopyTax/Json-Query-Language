@@ -17,24 +17,24 @@ class JQLTest extends JQLTestCase
 
 	public function testBaseLinePulse()
 	{
-		$this->convertToFluentTest('complex.json', "select * from `bobs` where `mamals`.`is_business` = ? and `mamals`.`is_business` = ? and (`mamals`.`field2` > ? or `tags`.`field2` < ? or `mamals`.`field3` = ? or (`mamals`.`field2` != ? or `mamals`.`city` = ?)) and `mamals`.`is_business` = ?");
+		$this->convertToFluentTest('complex.json', "select * from `bobs` where `bobs`.`is_business` = ? and `bobs`.`is_business` = ? and (`bobs`.`field2` > ? or `bobs`.`field2` < ? or `bobs`.`field3` = ? or (`bobs`.`field2` != ? or `bobs`.`city` = ?)) and `bobs`.`is_business` = ?");
 	}
 
 	public function test_A_or_PB_and_CP() { //P == parentheses.
-		$this->convertToFluentTest('Aor-BandC.json', "select * from `bobs` where `contacts`.`fieldA` > ? or (`contacts`.`fieldB` > ? and `contacts`.`fieldC` > ?)");
+		$this->convertToFluentTest('Aor-BandC.json', "select * from `bobs` where `bobs`.`fieldA` > ? or (`bobs`.`fieldB` > ? and `bobs`.`fieldC` > ?)");
 	}
 
 	public function test_A_and_PB_or_CP() { //P == parentheses.
-		$this->convertToFluentTest('Aand-BorC.json', "select * from `bobs` where `contacts`.`fieldA` > ? and (`contacts`.`fieldB` > ? or `contacts`.`fieldC` > ?)");
+		$this->convertToFluentTest('Aand-BorC.json', "select * from `bobs` where `bobs`.`fieldA` > ? and (`bobs`.`fieldB` > ? or `bobs`.`fieldC` > ?)");
 	}
 
 	public function test_A_or_B_orPC_andDP() {
-		$this->convertToFluentTest('Aor-Bor-CandD.json', "select * from `bobs` where `contacts`.`fieldA` > ? or `contacts`.`fieldB` > ? or (`contacts`.`fieldC` > ? and `contacts`.`fieldD` > ?)");
+		$this->convertToFluentTest('Aor-Bor-CandD.json', "select * from `bobs` where `bobs`.`fieldA` > ? or `bobs`.`fieldB` > ? or (`bobs`.`fieldC` > ? and `bobs`.`fieldD` > ?)");
 	}
 
 	public function test_AdvancedNested() {
 		// A and B and (C or D or E or (F OR (H and I))) and J
-		$this->convertToFluentTest('AdvancedNested.json', "select * from `bobs` where `contacts`.`A` = ? and `contacts`.`B` = ? and (`contacts`.`C` = ? or `contacts`.`D` = ? or `contacts`.`E` = ? or (`contacts`.`F` = ? or `contacts`.`G` = ? or (`contacts`.`H` = ? and `contacts`.`I` = ?))) and `contacts`.`J` = ?");
+		$this->convertToFluentTest('AdvancedNested.json', "select * from `bobs` where `bobs`.`A` = ? and `bobs`.`B` = ? and (`bobs`.`C` = ? or `bobs`.`D` = ? or `bobs`.`E` = ? or (`bobs`.`F` = ? or `bobs`.`G` = ? or (`bobs`.`H` = ? and `bobs`.`I` = ?))) and `bobs`.`J` = ?");
 	}
 
 	private function convertToFluentTest($filename, $expected)

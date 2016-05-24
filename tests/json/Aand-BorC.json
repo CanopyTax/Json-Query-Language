@@ -1,19 +1,19 @@
 {
   "jql": [
     {
-      "field": "contacts.fieldA",
+      "field": "mamals.fieldA",
       "operator": "gt",
       "value": "A"
     },
     {
       "OR": [
         {
-          "field": "contacts.fieldB",
+          "field": "mamals.fieldB",
           "operator": "gt",
           "value": "B"
         },
         {
-          "field": "contacts.fieldC",
+          "field": "mamals.fieldC",
           "operator": "gt",
           "value": "C"
         }

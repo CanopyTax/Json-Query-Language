@@ -22,6 +22,8 @@ class JQL
         'in' => 'in',
     ];
 
+    protected $joinedModels = [];
+
     public function __construct(Model $model)
     {
         $this->model = $model;
@@ -92,20 +94,15 @@ class JQL
         list($model, $field, $table) = $this->convertToModelNameAndField($field);
 
         if ($model != $this->getModelName()) {
-
-//            return $this->makeJoinQuery($query, $whery, $table, $field, $operator, $value);
+            if (!in_array($model, $this->joinedModels)) {
+                $queryResults = $query->join($table, $table.'.id', '=', $this->getTableName().'.'.str_singular($table).'_id');
+                $this->individualQuery($query, $whery, $table, $field, $operator, $value);
+                $this->joinedModels[] = $model;
+                return $queryResults;
+            }
         }
 
         return  $this->individualQuery($query, $whery, $table, $field, $operator, $value);
-    }
-
-    private function makeJoinQuery($query, $whery, $table, $field, $operator, $value)
-    {
-        /** @var \Illuminate\Database\Query\Builder $query */
-        $query->join($table, $table.'.id', '=', $this->getTableName().'.'.str_singular($table).'_id', function($query) use ($whery, $table, $field, $operator, $value) {
-            $this->individualQuery($query, $whery, $table, $field, $operator, $value);
-        });
-        return $query;
     }
 
     private function individualQuery($query, $whery, $table, $field, $operator, $value)
@@ -127,6 +124,9 @@ class JQL
             throw new \Exception('Format must be model.field, eg: mamals.speed');
         }
         $model = studly_case(str_singular($table));
+        if (isset($this->model->table)) {
+            $table = $this->model->table;
+        }
         return [$model, $field, $table];
     }
 

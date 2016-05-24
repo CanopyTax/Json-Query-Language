@@ -3,23 +3,23 @@
     {
       "OR": [
         {
-          "field": "contacts.fieldA",
+          "field": "mamals.fieldA",
           "operator": "gt",
           "value": "A"
         },
         {
-          "field": "contacts.fieldB",
+          "field": "mamals.fieldB",
           "operator": "gt",
           "value": "B"
         },
         [
           {
-            "field": "contacts.fieldC",
+            "field": "mamals.fieldC",
             "operator": "gt",
             "value": "C"
           },
           {
-            "field": "contacts.fieldD",
+            "field": "mamals.fieldD",
             "operator": "gt",
             "value": "D"
           }
