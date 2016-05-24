@@ -1,14 +1,104 @@
 # Canopy JQL (JSON Query Language)
 
+## JQL - Json Query Language
+
+JQL is a json query language.
+
+A single query looks like:
+```json
+{
+  "field": "model.fieldname",
+  "operator": "lt",
+  "value": "value"
+}
+```
+
+### Operators
+
+* `lt` = <,
+* `gt` = >,
+* `lte` = <=,
+* `gte` = >=,
+* `eq` = =,
+* `ne` = !=,
+* `beginswith`
+* `endswith`
+* `contains`
+* `in`
+
+### Example:
+```json
+{
+  "jql": [
+    {
+      "field": "mamals.A",
+      "operator": "in",
+      "value": ["A", "B", "C"]
+    },
+    {
+      "field": "mamals.B",
+      "operator": "eq",
+      "value": "false"
+    },
+    {
+      "OR": [
+        {
+          "field": "birds.C",
+          "operator": "eq",
+          "value": "true"
+        },
+        {
+          "field": "mamals.D",
+          "operator": "eq",
+          "value": "true"
+        },
+        {
+          "field": "mamals.E",
+          "operator": "eq",
+          "value": "true"
+        },
+        {
+          "OR": [
+            {
+              "field": "dogs.F",
+              "operator": "eq",
+              "value": "true"
+            },
+            {
+              "field": "dogs.G",
+              "operator": "eq",
+              "value": "true"
+            },
+            [
+              {
+                "field": "cats.H",
+                "operator": "eq",
+                "value": "true"
+              },
+              {
+                "field": "cats.I",
+                "operator": "eq",
+                "value": "true"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "field": "dogs.J",
+      "operator": "eq",
+      "value": "true"
+    }
+  ]
+}
+```
+
+
 
 ## Requirements
 
 - PHP >=5.5
-
-## Getting started
-
-
-## Code Examples
 
 
 ## Contributing
