@@ -62,6 +62,12 @@ class JQLTest extends JQLTestCase
         $this->convertToFluentTest('AdvancedJoin.json', "select * from `bobs` inner join `birds` on `birds`.`id` = `bobs`.`bird_id` inner join `dogs` on `dogs`.`id` = `bobs`.`dog_id` inner join `cats` on `cats`.`id` = `bobs`.`cat_id` where `bobs`.`A` = ? and `bobs`.`B` = ? and (`birds`.`C` = ? or `bobs`.`D` = ? or `bobs`.`E` = ? or (`dogs`.`F` = ? or `dogs`.`G` = ? or (`cats`.`H` = ? and `cats`.`I` = ?))) and `dogs`.`J` = ?");
     }
 
+    public function test_approved_models_to_join_throws_exception()
+    {
+        $this->jql->setApprovedModels(['Mamal', 'Bird', 'Dog', 'Cat']);
+        $this->convertToFluentTest('AdvancedJoin.json', "select * from `bobs` inner join `birds` on `birds`.`id` = `bobs`.`bird_id` inner join `dogs` on `dogs`.`id` = `bobs`.`dog_id` inner join `cats` on `cats`.`id` = `bobs`.`cat_id` where `bobs`.`A` = ? and `bobs`.`B` = ? and (`birds`.`C` = ? or `bobs`.`D` = ? or `bobs`.`E` = ? or (`dogs`.`F` = ? or `dogs`.`G` = ? or (`cats`.`H` = ? and `cats`.`I` = ?))) and `dogs`.`J` = ?");
+    }
+
     private function convertToFluentTest($filename, $expected)
     {
         $json = $this->getJson($filename);
