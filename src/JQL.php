@@ -92,11 +92,25 @@ class JQL
         list($model, $field, $table) = $this->convertToModelNameAndField($field);
 
         if ($model != $this->getModelName()) {
-//            return $this->joinWhere();
+
+//            return $this->makeJoinQuery($query, $whery, $table, $field, $operator, $value);
         }
 
-        $result = $query->$whery($table.'.'.$field, $operator, $value);
+        return  $this->individualQuery($query, $whery, $table, $field, $operator, $value);
+    }
 
+    private function makeJoinQuery($query, $whery, $table, $field, $operator, $value)
+    {
+        /** @var \Illuminate\Database\Query\Builder $query */
+        $query->join($table, $table.'.id', '=', $this->getTableName().'.'.str_singular($table).'_id', function($query) use ($whery, $table, $field, $operator, $value) {
+            $this->individualQuery($query, $whery, $table, $field, $operator, $value);
+        });
+        return $query;
+    }
+
+    private function individualQuery($query, $whery, $table, $field, $operator, $value)
+    {
+        $result = $query->$whery($table.'.'.$field, $operator, $value);
         return $result;
     }
 
@@ -126,6 +140,12 @@ class JQL
         $reflection = new \ReflectionClass($this->model);
 
         return $reflection->getShortName();
+    }
+
+    private function getTableName()
+    {
+        $table = snake_case(str_plural($this->getModelName()));
+        return $table;
     }
 
     /**
