@@ -1,52 +1,52 @@
 {
   "jql": [
     {
-      "field": "mamals.A",
+      "field": "mammals.A",
       "operator": "eq",
       "value": "true"
     },
     {
-      "field": "mamals.B",
+      "field": "mammals.B",
       "operator": "eq",
       "value": "false"
     },
     {
       "OR": [
         {
-          "field": "mamals.C",
+          "field": "mammals.C",
           "operator": "eq",
           "value": "true"
         },
         {
-          "field": "mamals.D",
+          "field": "mammals.D",
           "operator": "eq",
           "value": "true"
         },
         {
-          "field": "mamals.E",
+          "field": "mammals.E",
           "operator": "eq",
           "value": "true"
         },
         {
           "OR": [
             {
-              "field": "mamals.F",
+              "field": "mammals.F",
               "operator": "eq",
               "value": "true"
             },
             {
-              "field": "mamals.G",
+              "field": "mammals.G",
               "operator": "eq",
               "value": "true"
             },
             [
               {
-                "field": "mamals.H",
+                "field": "mammals.H",
                 "operator": "eq",
                 "value": "true"
               },
               {
-                "field": "mamals.I",
+                "field": "mammals.I",
                 "operator": "eq",
                 "value": "true"
               }
@@ -56,7 +56,7 @@
       ]
     },
     {
-      "field": "mamals.J",
+      "field": "mammals.J",
       "operator": "eq",
       "value": "true"
     }

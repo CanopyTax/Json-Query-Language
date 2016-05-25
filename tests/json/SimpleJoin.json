@@ -1,7 +1,7 @@
 {
   "jql": [
     {
-      "field": "mamals.fieldA",
+      "field": "mammals.fieldA",
       "operator": "gt",
       "value": "A"
     },

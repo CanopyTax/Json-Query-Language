@@ -1,12 +1,12 @@
 {
   "jql": [
     {
-      "field": "mamals.A",
+      "field": "mammals.A",
       "operator": "eq",
       "value": "true"
     },
     {
-      "field": "mamals.B",
+      "field": "mammals.B",
       "operator": "eq",
       "value": "false"
     },
@@ -18,12 +18,12 @@
           "value": "true"
         },
         {
-          "field": "mamals.D",
+          "field": "mammals.D",
           "operator": "eq",
           "value": "true"
         },
         {
-          "field": "mamals.E",
+          "field": "mammals.E",
           "operator": "eq",
           "value": "true"
         },

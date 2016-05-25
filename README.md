@@ -31,12 +31,12 @@ A single query looks like:
 {
   "jql": [
     {
-      "field": "mamals.A",
+      "field": "mammals.A",
       "operator": "in",
       "value": ["A", "B", "C"]
     },
     {
-      "field": "mamals.B",
+      "field": "mammals.B",
       "operator": "eq",
       "value": "false"
     },
@@ -48,12 +48,12 @@ A single query looks like:
           "value": "true"
         },
         {
-          "field": "mamals.D",
+          "field": "mammals.D",
           "operator": "eq",
           "value": "true"
         },
         {
-          "field": "mamals.E",
+          "field": "mammals.E",
           "operator": "eq",
           "value": "true"
         },

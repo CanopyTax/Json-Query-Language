@@ -1,6 +1,8 @@
 <?php
 namespace Canopy\JQL;
 
+use Exception;
+use ReflectionClass;
 use stdClass;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -32,7 +34,7 @@ class JQL
     {
         $this->model = $model;
         $this->modelName = $this->getModelName();
-        $this->table = (isset($this->model->table)) ? $this->model->table : snake_case(str_plural($this->getModelName()));
+        $this->table = isset($this->model->table) ? $this->model->table : snake_case(str_plural($this->getModelName()));
         $this->query = $model->query();
     }
 
@@ -71,7 +73,13 @@ class JQL
                         $this->parseJQL($item, $query);
                     });
                 } else {
-                    $query = $this->buildQueryOperation($query, $whery, $item->field, $this->operatorMap[$item->operator], $item->value);
+                    $query = $this->buildQueryOperation(
+                        $query,
+                        $whery,
+                        $item->field,
+                        $this->operatorMap[$item->operator],
+                        $item->value
+                    );
                 }
             }
 
@@ -83,17 +91,17 @@ class JQL
 
     /**
      * @param $query
-     * @param $whery
-     * @param $field
-     * @param $operator
-     * @param $value
+     * @param string $whery
+     * @param string $field
+     * @param string $operator
+     * @param string|int|bool $value
      * @return mixed
-     * @throws \Exception
+     * @throws Exception
      */
     private function buildQueryOperation($query, $whery, $field, $operator, $value)
     {
         if (in_array($operator, ['beginswith', 'endswith', 'contains'])) {
-            throw new \Exception($operator . ": Not currently defined");
+            throw new Exception($operator . ": Not currently defined");
         }
 
         list($model, $field, $table) = $this->convertToModelNameAndField($field);
@@ -135,7 +143,7 @@ class JQL
             }
             $field = $explosions[1];
         } else {
-            throw new \Exception('Format must be model.field, eg: mamals.speed');
+            throw new Exception('Format must be model.field, eg: mammals.speed');
         }
         return [$model, $field, $table];
     }
@@ -147,7 +155,7 @@ class JQL
      */
     public function getModelName()
     {
-        $reflection = new \ReflectionClass($this->model);
+        $reflection = new ReflectionClass($this->model);
 
         return $reflection->getShortName();
     }

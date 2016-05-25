@@ -1,24 +1,24 @@
 {
   "jql": [
     {
-      "field": "mamals.is_business",
+      "field": "mammals.is_business",
       "operator": "eq",
       "value": "true"
     },
     {
-      "field": "mamals.is_business",
+      "field": "mammals.is_business",
       "operator": "eq",
       "value": "false"
     },
     {
       "OR": [
         {
-          "field": "mamals.field2",
+          "field": "mammals.field2",
           "operator": "gt",
           "value": "9"
         },
         {
-          "field": "mamals.field2",
+          "field": "mammals.field2",
           "operator": "lt",
           "value": "5"
         },
@@ -48,7 +48,7 @@
       ]
     },
     {
-      "field": "mamals.is_business",
+      "field": "mammals.is_business",
       "operator": "eq",
       "value": "false"
     }
