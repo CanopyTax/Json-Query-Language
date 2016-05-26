@@ -36,17 +36,39 @@ class JQL
         'in' => 'in',
     ];
 
-    /** @var array */
-    protected $joinedModels = [];
+    /**
+     * names of tables that have been joined
+     *
+     * @var array
+     */
+    protected $joinedTables = [];
 
-    /** @var array */
+    /**
+     * ['modelAlias' => ['fieldAlias' => ['operator']]]
+     *
+     * @var array
+     */
     protected $approvedOperators = [];
 
-    /** @var array */
-    protected $modelMapping = [];
+    /**
+     * Mapping of how all the tables join back to the main table
+     * ['table1' => ['table_1.id', 'main_table.table_1_id], 'table_2' => ['main_table.id', 'table_2.main_table_id]]
+     *
+     * @var array
+     */
+    protected $tableMap = [];
+
+    /**
+     * Mapping of field aliases to where in the database they come from
+     * ['Record.A' => ['main_table', 'main_table.field_1'], 'Record.B' => ['table_2', 'table_2.json_data->>\'b\'']]
+     *
+     * @var array
+     */
+    protected $fieldMap = [];
 
     /**
      * @param Model $mainModel
+     * @param string $mainModelAlias
      */
     public function __construct(Model $mainModel, $mainModelAlias = null)
     {
@@ -127,7 +149,7 @@ class JQL
      */
     private function buildQueryOperation($query, $whery, $modelFieldAlias, $operatorAlias, $value)
     {
-        list($model, $field, $table, $modelAlias, $fieldAlias) = $this->convertToModelNameAndField($modelFieldAlias);
+        list($field, $table, $modelAlias, $fieldAlias) = $this->convertToModelNameAndField($modelFieldAlias);
 
         if (!in_array($operatorAlias, $this->approvedOperators[$modelAlias][$fieldAlias])) {
             throw new JQLValidationException($modelFieldAlias.': Operator "'.$operatorAlias.'" Not allowed');
@@ -135,8 +157,8 @@ class JQL
 
         $operator = $this->operatorMap[$operatorAlias];
 
-        if ($model != $this->mainModelName) {
-            if (!in_array($model, $this->joinedModels)) {
+        if ($table != $this->mainModel->getTable()) {
+            if (!in_array($table, $this->joinedTables)) {
                 $this->query->join(
                     $table,
                     $table.'.id',
@@ -144,7 +166,7 @@ class JQL
                     $this->mainModel->getTable().'.'.str_singular($table).'_id'
                 );
                 $this->individualQuery($query, $whery, $table, $field, $operator, $value);
-                $this->joinedModels[] = $model;
+                $this->joinedTables[] = $table;
                 return $query;
             }
         }
@@ -179,7 +201,6 @@ class JQL
         $explosions = explode('.', $modelFieldAlias);
         if (count($explosions) == 1) {
             $table = $this->mainModel->getTable();
-            $model = $this->mainModelName;
             $modelAlias = $this->mainModelAlias;
             $fieldAlias = $explosions[0];
             $field = $explosions[0];
@@ -188,9 +209,7 @@ class JQL
             $fieldAlias = $explosions[1];
             $table = $explosions[0];
             $modelTable = snake_case(str_plural($this->mainModelName));
-            $model = studly_case(str_singular($table));
             if ($table == $modelTable) {
-                $model = $this->mainModelName;
                 $table = $this->mainModel->getTable();
             }
             $field = $explosions[1];
@@ -203,7 +222,30 @@ class JQL
         ) {
             throw new JQLValidationException($modelFieldAlias.': Not allowed');
         }
-        return [$model, $field, $table, $modelAlias, $fieldAlias];
+        return [$field, $table, $modelAlias, $fieldAlias];
+    }
+
+    /**
+     * @param Model $mainModel
+     * @param string $mainModelAlias
+     * @return $this
+     */
+    public function setMainModel($mainModel, $mainModelAlias = null)
+    {
+        $this->mainModel = $mainModel;
+        $reflection = new ReflectionClass($mainModel);
+        $this->mainModelName = $reflection->getShortName();
+        $this->query = $mainModel->query();
+        $this->mainModelAlias = is_null($mainModelAlias) ? $this->mainModelName : $mainModelAlias;
+        return $this;
+    }
+
+    /**
+     * @return Model
+     */
+    public function getMainModel()
+    {
+        return $this->mainModel;
     }
 
     /**
@@ -217,14 +259,6 @@ class JQL
     }
 
     /**
-     * @return Model
-     */
-    public function getMainModel()
-    {
-        return $this->mainModel;
-    }
-
-    /**
      * @return string
      */
     public function getMainModelAlias()
@@ -233,15 +267,15 @@ class JQL
     }
 
     /**
-     * @param Model $mainModel
+     * Create a whitelist of what operators on what fields on what models are approved
+     *
+     * @param array $approvedOperators ['modelAlias' => ['fieldAlias' => ['operator']]]
+     * @return $this
      */
-    public function setMainModel($mainModel, $mainModelAlias = null)
+    public function setApprovedOperators(array $approvedOperators)
     {
-        $this->mainModel = $mainModel;
-        $reflection = new ReflectionClass($mainModel);
-        $this->mainModelName = $reflection->getShortName();
-        $this->query = $mainModel->query();
-        $this->mainModelAlias = is_null($mainModelAlias) ? $this->mainModelName : $mainModelAlias;
+        $this->approvedOperators = $approvedOperators;
+        return $this;
     }
 
     /**
@@ -253,12 +287,38 @@ class JQL
     }
 
     /**
-     * Create a whitelist of what operators on what fields on what models are approved
+     * Set mapping of how all tables being queried join back to the main table
+     * ['table1' => ['table_1.id', 'main_table.table_1_id], 'table_2' => ['main_table.id', 'table_2.main_table_id]]
      *
-     * @param array $approvedOperators ['model' => ['field => ['operator']]]
+     * @param array $tableMap
+     * @return $this
      */
-    public function setApprovedOperators(array $approvedOperators)
+    public function setTableMap(array $tableMap)
     {
-        $this->approvedOperators = $approvedOperators;
+        $this->tableMap = $tableMap;
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getTableMap()
+    {
+        return $this->tableMap;
+    }
+
+    /**
+     * @param array $fieldMap
+     * @return $this
+     */
+    public function setFieldMap(array $fieldMap)
+    {
+        $this->fieldMap = $fieldMap;
+        return $this;
+    }
+
+    public function getFieldMap()
+    {
+        return $this->fieldMap;
     }
 }
