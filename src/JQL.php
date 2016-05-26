@@ -9,8 +9,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class JQL
 {
+    /** @var Model */
     protected $model;
+
+    /** @var Builder */
     protected $query;
+
+    /** @var array */
     protected $operatorMap = [
         'lt' => '<',
         'gt' => '>',
@@ -24,12 +29,18 @@ class JQL
         'in' => 'in',
     ];
 
+    /** @var array */
     protected $joinedModels = [];
 
+    /** @var array */
     protected $approvedModels = [];
 
+    /** @var array */
     protected $modelMapping = [];
 
+    /**
+     * @param Model $model
+     */
     public function __construct(Model $model)
     {
         $this->model = $model;
@@ -38,6 +49,10 @@ class JQL
         $this->query = $model->query();
     }
 
+    /**
+     * @param string $json
+     * @return Builder
+     */
     public function convertToFluent($json)
     {
         $json = json_decode($json);
@@ -50,7 +65,7 @@ class JQL
      * @param array $jql
      * @param Builder $query
      * @param string $binder
-     * @return mixed
+     * @return Builder
      */
     public function parseJQL($jql, $query, $binder = 'AND')
     {
@@ -90,12 +105,12 @@ class JQL
     }
 
     /**
-     * @param $query
+     * @param Builder $query
      * @param string $whery
      * @param string $field
      * @param string $operator
      * @param string|int|bool $value
-     * @return mixed
+     * @return Builder
      * @throws Exception
      */
     private function buildQueryOperation($query, $whery, $field, $operator, $value)
@@ -118,6 +133,15 @@ class JQL
         return $this->individualQuery($query, $whery, $table, $field, $operator, $value);
     }
 
+    /**
+     * @param Builder $query
+     * @param string $whery
+     * @param string $table
+     * @param string $field
+     * @param string $operator
+     * @param mixed $value
+     * @return Builder
+     */
     private function individualQuery($query, $whery, $table, $field, $operator, $value)
     {
         if ($operator == 'in') {
@@ -126,6 +150,11 @@ class JQL
         return $query->$whery($table.'.'.$field, $operator, $value);
     }
 
+    /**
+     * @param string $field
+     * @return array
+     * @throws Exception
+     */
     private function convertToModelNameAndField($field)
     {
         $explosions = explode('.', $field);
