@@ -1,29 +1,29 @@
 {
   "jql": [
     {
-      "field": "mammals.is_business",
+      "field": "mammals.A",
       "operator": "eq",
       "value": "true"
     },
     {
-      "field": "mammals.is_business",
+      "field": "mammals.B",
       "operator": "eq",
       "value": "false"
     },
     {
       "OR": [
         {
-          "field": "mammals.field2",
+          "field": "mammals.field_2",
           "operator": "gt",
           "value": "9"
         },
         {
-          "field": "mammals.field2",
+          "field": "mammals.field_2",
           "operator": "lt",
           "value": "5"
         },
         {
-          "field": "field3",
+          "field": "field_3",
           "operator": "in",
           "value": [
             123,
@@ -34,12 +34,12 @@
         {
           "OR": [
             {
-              "field": "field2",
+              "field": "field_2",
               "operator": "ne",
               "value": "7"
             },
             {
-              "field": "city",
+              "field": "C",
               "operator": "eq",
               "value": "pr"
             }
@@ -48,7 +48,7 @@
       ]
     },
     {
-      "field": "mammals.is_business",
+      "field": "mammals.D",
       "operator": "eq",
       "value": "false"
     }

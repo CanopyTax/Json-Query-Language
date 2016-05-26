@@ -1,7 +1,7 @@
 {
   "jql": [
     {
-      "field": "mammals.Z",
+      "field": "reptiles.A",
       "operator": "eq",
       "value": "true"
     }

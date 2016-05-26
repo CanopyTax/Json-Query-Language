@@ -1,12 +1,12 @@
 {
   "jql": [
     {
-      "field": "mammals.fieldA",
+      "field": "mammals.field_1",
       "operator": "gt",
       "value": "A"
     },
     {
-      "field": "humans.fieldB",
+      "field": "humans.field_2",
       "operator": "gt",
       "value": "B"
     }

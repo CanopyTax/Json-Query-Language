@@ -2,6 +2,7 @@
 namespace Canopy\JQL;
 
 use Canopy\JQL\Exceptions\JQLException;
+use Canopy\JQL\Exceptions\JQLValidationException;
 use ReflectionClass;
 use stdClass;
 use Illuminate\Database\Eloquent\Builder;
@@ -10,7 +11,13 @@ use Illuminate\Database\Eloquent\Model;
 class JQL
 {
     /** @var Model */
-    protected $model;
+    protected $mainModel;
+
+    /** @var string */
+    protected $mainModelName;
+
+    /** @var string */
+    protected $mainModelAlias;
 
     /** @var Builder */
     protected $query;
@@ -33,20 +40,17 @@ class JQL
     protected $joinedModels = [];
 
     /** @var array */
-    protected $approvedModels = [];
+    protected $approvedOperators = [];
 
     /** @var array */
     protected $modelMapping = [];
 
     /**
-     * @param Model $model
+     * @param Model $mainModel
      */
-    public function __construct(Model $model)
+    public function __construct(Model $mainModel, $mainModelAlias = null)
     {
-        $this->model = $model;
-        $this->modelName = $this->getModelName();
-        $this->table = isset($this->model->table) ? $this->model->table : snake_case(str_plural($this->getModelName()));
-        $this->query = $model->query();
+        $this->setMainModel($mainModel, $mainModelAlias);
     }
 
     /**
@@ -91,16 +95,16 @@ class JQL
                 } else {
                     // Validate operator is allowed
                     if (!isset($this->operatorMap[$item->operator]) ||
-                        in_array($item->operator, ['beginswith', 'endswith', 'contains'])
+                        in_array($item->operator, ['endswith', 'contains'])
                     ) {
-                        throw new JQLException($item->operator . ": Not currently defined");
+                        throw new JQLValidationException($item->operator . ": Not currently defined");
                     }
 
                     $query = $this->buildQueryOperation(
                         $query,
                         $whery,
                         $item->field,
-                        $this->operatorMap[$item->operator],
+                        $item->operator,
                         $item->value
                     );
                 }
@@ -115,18 +119,30 @@ class JQL
     /**
      * @param Builder $query
      * @param string $whery
-     * @param string $field
-     * @param string $operator
+     * @param string $modelFieldAlias
+     * @param string $operatorAlias
      * @param string|int|bool $value
      * @return Builder
+     * @throws JQLValidationException
      */
-    private function buildQueryOperation($query, $whery, $field, $operator, $value)
+    private function buildQueryOperation($query, $whery, $modelFieldAlias, $operatorAlias, $value)
     {
-        list($model, $field, $table) = $this->convertToModelNameAndField($field);
+        list($model, $field, $table, $modelAlias, $fieldAlias) = $this->convertToModelNameAndField($modelFieldAlias);
 
-        if ($model != $this->modelName) {
+        if (!in_array($operatorAlias, $this->approvedOperators[$modelAlias][$fieldAlias])) {
+            throw new JQLValidationException($modelFieldAlias.': Operator "'.$operatorAlias.'" Not allowed');
+        }
+
+        $operator = $this->operatorMap[$operatorAlias];
+
+        if ($model != $this->mainModelName) {
             if (!in_array($model, $this->joinedModels)) {
-                $this->query->join($table, $table.'.id', '=', $this->table.'.'.str_singular($table).'_id');
+                $this->query->join(
+                    $table,
+                    $table.'.id',
+                    '=',
+                    $this->mainModel->getTable().'.'.str_singular($table).'_id'
+                );
                 $this->individualQuery($query, $whery, $table, $field, $operator, $value);
                 $this->joinedModels[] = $model;
                 return $query;
@@ -154,30 +170,40 @@ class JQL
     }
 
     /**
-     * @param string $field
+     * @param string $modelFieldAlias
      * @return array
      * @throws JQLException
      */
-    private function convertToModelNameAndField($field)
+    private function convertToModelNameAndField($modelFieldAlias)
     {
-        $explosions = explode('.', $field);
+        $explosions = explode('.', $modelFieldAlias);
         if (count($explosions) == 1) {
-            $table = $this->table;
-            $model = $this->modelName;
+            $table = $this->mainModel->getTable();
+            $model = $this->mainModelName;
+            $modelAlias = $this->mainModelAlias;
+            $fieldAlias = $explosions[0];
             $field = $explosions[0];
         } elseif (count($explosions) == 2) {
+            $modelAlias = $explosions[0];
+            $fieldAlias = $explosions[1];
             $table = $explosions[0];
-            $modelTable = snake_case(str_plural($this->modelName));
+            $modelTable = snake_case(str_plural($this->mainModelName));
             $model = studly_case(str_singular($table));
             if ($table == $modelTable) {
-                $model = $this->modelName;
-                $table = $this->table;
+                $model = $this->mainModelName;
+                $table = $this->mainModel->getTable();
             }
             $field = $explosions[1];
         } else {
-            throw new JQLException('Format must be model.field, eg: mammals.speed');
+            throw new JQLValidationException('Format must be model.field, eg: mammals.speed');
         }
-        return [$model, $field, $table];
+
+        if (!isset($this->approvedOperators[$modelAlias]) ||
+            !isset($this->approvedOperators[$modelAlias][$fieldAlias])
+        ) {
+            throw new JQLValidationException($modelFieldAlias.': Not allowed');
+        }
+        return [$model, $field, $table, $modelAlias, $fieldAlias];
     }
 
     /**
@@ -185,42 +211,54 @@ class JQL
      *
      * @return string
      */
-    public function getModelName()
+    public function getMainModelName()
     {
-        $reflection = new ReflectionClass($this->model);
-
-        return $reflection->getShortName();
+        return $this->mainModelName;
     }
 
     /**
      * @return Model
      */
-    public function getModel()
+    public function getMainModel()
     {
-        return $this->model;
+        return $this->mainModel;
     }
 
     /**
-     * @param Model $model
+     * @return string
      */
-    public function setModel($model)
+    public function getMainModelAlias()
     {
-        $this->model = $model;
+        return $this->mainModelAlias;
+    }
+
+    /**
+     * @param Model $mainModel
+     */
+    public function setMainModel($mainModel, $mainModelAlias = null)
+    {
+        $this->mainModel = $mainModel;
+        $reflection = new ReflectionClass($mainModel);
+        $this->mainModelName = $reflection->getShortName();
+        $this->query = $mainModel->query();
+        $this->mainModelAlias = is_null($mainModelAlias) ? $this->mainModelName : $mainModelAlias;
     }
 
     /**
      * @return array
      */
-    public function getApprovedModels()
+    public function getApprovedOperators()
     {
-        return $this->approvedModels;
+        return $this->approvedOperators;
     }
 
     /**
-     * @param array $approvedModels
+     * Create a whitelist of what operators on what fields on what models are approved
+     *
+     * @param array $approvedOperators ['model' => ['field => ['operator']]]
      */
-    public function setApprovedModels(array $approvedModels)
+    public function setApprovedOperators(array $approvedOperators)
     {
-        $this->approvedModels = $approvedModels;
+        $this->approvedOperators = $approvedOperators;
     }
 }

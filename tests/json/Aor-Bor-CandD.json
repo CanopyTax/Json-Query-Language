@@ -3,23 +3,23 @@
     {
       "OR": [
         {
-          "field": "mammals.fieldA",
+          "field": "mammals.field_1",
           "operator": "gt",
           "value": "A"
         },
         {
-          "field": "mammals.fieldB",
+          "field": "mammals.field_2",
           "operator": "gt",
           "value": "B"
         },
         [
           {
-            "field": "mammals.fieldC",
+            "field": "mammals.field_3",
             "operator": "gt",
             "value": "C"
           },
           {
-            "field": "mammals.fieldD",
+            "field": "mammals.D",
             "operator": "gt",
             "value": "D"
           }
