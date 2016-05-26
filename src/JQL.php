@@ -1,7 +1,7 @@
 <?php
 namespace Canopy\JQL;
 
-use Exception;
+use Canopy\JQL\Exceptions\JQLException;
 use ReflectionClass;
 use stdClass;
 use Illuminate\Database\Eloquent\Builder;
@@ -66,6 +66,7 @@ class JQL
      * @param Builder $query
      * @param string $binder
      * @return Builder
+     * @throws JQLException
      */
     public function parseJQL($jql, $query, $binder = 'AND')
     {
@@ -88,6 +89,13 @@ class JQL
                         $this->parseJQL($item, $query);
                     });
                 } else {
+                    // Validate operator is allowed
+                    if (!isset($this->operatorMap[$item->operator]) ||
+                        in_array($item->operator, ['beginswith', 'endswith', 'contains'])
+                    ) {
+                        throw new JQLException($item->operator . ": Not currently defined");
+                    }
+
                     $query = $this->buildQueryOperation(
                         $query,
                         $whery,
@@ -111,14 +119,9 @@ class JQL
      * @param string $operator
      * @param string|int|bool $value
      * @return Builder
-     * @throws Exception
      */
     private function buildQueryOperation($query, $whery, $field, $operator, $value)
     {
-        if (in_array($operator, ['beginswith', 'endswith', 'contains'])) {
-            throw new Exception($operator . ": Not currently defined");
-        }
-
         list($model, $field, $table) = $this->convertToModelNameAndField($field);
 
         if ($model != $this->modelName) {
@@ -153,7 +156,7 @@ class JQL
     /**
      * @param string $field
      * @return array
-     * @throws Exception
+     * @throws JQLException
      */
     private function convertToModelNameAndField($field)
     {
@@ -172,7 +175,7 @@ class JQL
             }
             $field = $explosions[1];
         } else {
-            throw new Exception('Format must be model.field, eg: mammals.speed');
+            throw new JQLException('Format must be model.field, eg: mammals.speed');
         }
         return [$model, $field, $table];
     }

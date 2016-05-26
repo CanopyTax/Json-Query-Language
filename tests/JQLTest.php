@@ -1,6 +1,7 @@
 <?php
 namespace Canopy\Test\JQL;
 
+use Canopy\JQL\Exceptions\JQLException;
 use Canopy\JQL\JQL;
 
 class JQLTest extends JQLTestCase
@@ -21,6 +22,26 @@ class JQLTest extends JQLTestCase
             'complex.json',
             "select * from `bobs` where `bobs`.`is_business` = ? and `bobs`.`is_business` = ? and (`bobs`.`field2` > ? or `bobs`.`field2` < ? or `bobs`.`field3` in (?, ?, ?) or (`bobs`.`field2` != ? or `bobs`.`city` = ?)) and `bobs`.`is_business` = ?"
         );
+    }
+
+    public function testInvalidField()
+    {
+        $this->expectException(JQLException::class);
+        $this->expectExceptionMessage('Format must be');
+
+        $json = $this->getJson('invalidField.json');
+        $results = $this->jql->convertToFluent($json);
+
+    }
+
+    public function testInvalidOperator()
+    {
+        $this->expectException(JQLException::class);
+        $this->expectExceptionMessage('eqq: Not currently defined');
+
+        $json = $this->getJson('invalidOperator.json');
+        $results = $this->jql->convertToFluent($json);
+
     }
 
     public function test_A_or_PB_and_CP()
