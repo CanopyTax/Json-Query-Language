@@ -1,5 +1,7 @@
 {
   "name": "canopy-tax/jql",
+  "homepage": "https://github.com/CanopyTax/Json-Query-Language",
+  "license": "MIT",
   "authors": [
     {
       "name": "Skyler Lewis",
