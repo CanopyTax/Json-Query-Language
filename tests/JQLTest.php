@@ -44,6 +44,9 @@ class JQLTest extends JQLTestCase
             'humans' => [
                 'field_2' => ['gt'],
             ],
+            'magic' => [
+                'A' => ['eq'],
+            ],
         ];
 
         $tableMap = [
@@ -51,10 +54,26 @@ class JQLTest extends JQLTestCase
             'cats' => ['cats.bob_id', 'bobs.id'],
             'dogs' => ['dogs.id', 'bobs.dog_id'],
             'humans' => ['humans.id', 'bobs.human_id'],
+            'ggs' => ['ggs.id', 'bobs_ggs.gg_id', 'bobs_ggs'],
+            'bobs_ggs' => ['bobs_ggs.bob_id', 'bobs.id'],
+        ];
+
+        $fieldMap = [
+            'mammals.A' => ['bobs', 'bobs.A'],
+            'mammals.B' => ['bobs', 'bobs.B'],
+            'mammals.C' => ['bobs', 'bobs.C'],
+            'mammals.D' => ['bobs', 'bobs.D'],
+            'mammals.E' => ['bobs', 'bobs.E'],
+            'mammals.F' => ['bobs', 'bobs.F'],
+            'mammals.G' => ['ggs', 'ggs.gg'],
+            'mammals.field_1' => ['bobs', 'bobs.field_1'],
+            'mammals.field_2' => ['bobs', 'bobs.field_2'],
+            'mammals.field_3' => ['bobs', 'bobs.field_3'],
         ];
 
         $this->jql->setApprovedOperators($whitelist)
-            ->setTableMap($tableMap);
+            ->setTableMap($tableMap)
+            ->setFieldMap($fieldMap);
     }
 
     public function testMainModelGetters()
@@ -83,11 +102,29 @@ class JQLTest extends JQLTestCase
         $this->assertEquals($whitelist, $this->jql->getApprovedOperators());
     }
 
+    public function testTableMapGetter()
+    {
+        $testData = [uniqid('table') => [uniqid()]];
+        $this->jql->setTableMap($testData);
+        $this->assertEquals($testData, $this->jql->getTableMap());
+    }
+
+    public function testFieldMapGetter()
+    {
+        $testData = [uniqid('table') => [uniqid()]];
+        $this->jql->setFieldMap($testData);
+        $this->assertEquals($testData, $this->jql->getFieldMap());
+    }
+
     public function testBaseLinePulse()
     {
         $this->convertToFluentTest(
             'complex.json',
-            "select * from `bobs` where `bobs`.`A` = ? and `bobs`.`B` = ? and (`bobs`.`field_2` > ? or `bobs`.`field_2` < ? or `bobs`.`field_3` in (?, ?, ?) or (`bobs`.`field_2` != ? or `bobs`.`C` = ?)) and `bobs`.`D` = ?"
+            "select * from `bobs`"
+                ." where `bobs`.`A` = ? and `bobs`.`B` = ?"
+                ." and (`bobs`.`field_2` > ? or `bobs`.`field_2` < ?"
+                    ." or `bobs`.`field_3` in (?, ?, ?) or (`bobs`.`field_2` != ? or `bobs`.`C` = ?)"
+                .") and `bobs`.`D` = ?"
         );
     }
 
@@ -118,7 +155,16 @@ class JQLTest extends JQLTestCase
         $json = $this->getJson('invalidField.json');
         $this->jql->convertToFluent($json);
     }
-    
+
+    public function testInvalidFieldOperator()
+    {
+        $this->expectException(JQLValidationException::class);
+        $this->expectExceptionMessage('mammals.A: Operator "in" not allowed');
+
+        $json = $this->getJson('invalidFieldOperator.json');
+        $this->jql->convertToFluent($json);
+    }
+
     public function testInvalidOperator()
     {
         $this->expectException(JQLValidationException::class);
@@ -127,6 +173,15 @@ class JQLTest extends JQLTestCase
         $json = $this->getJson('invalidOperator.json');
         $this->jql->convertToFluent($json);
 
+    }
+
+    public function testUnjoinableTable()
+    {
+        $this->expectException(JQLException::class);
+        $this->expectExceptionMessage('magic.A: Could not find way to join table');
+
+        $json = $this->getJson('unjoinableModel.json');
+        $this->jql->convertToFluent($json);
     }
 
     public function test_A_or_PB_and_CP()
@@ -151,7 +206,8 @@ class JQLTest extends JQLTestCase
     {
         $this->convertToFluentTest(
             'Aor-Bor-CandD.json',
-            "select * from `bobs` where `bobs`.`field_1` > ? or `bobs`.`field_2` > ? or (`bobs`.`field_3` > ? and `bobs`.`D` > ?)"
+            "select * from `bobs`"
+                ." where `bobs`.`field_1` > ? or `bobs`.`field_2` > ? or (`bobs`.`field_3` > ? and `bobs`.`D` > ?)"
         );
     }
 
@@ -168,7 +224,11 @@ class JQLTest extends JQLTestCase
         // A and B and (C or D or E or (F OR (field_1 and field2))) and field_3
         $this->convertToFluentTest(
             'AdvancedNested.json',
-            "select * from `bobs` where `bobs`.`A` = ? and `bobs`.`B` = ? and (`bobs`.`C` = ? or `bobs`.`D` = ? or `bobs`.`E` = ? or (`bobs`.`F` = ? or `bobs`.`G` = ? or (`bobs`.`field_1` = ? and `bobs`.`field_2` = ?))) and `bobs`.`field_3` = ?"
+            "select * from `bobs`"
+                ." where `bobs`.`A` = ? and `bobs`.`B` = ?"
+                ." and (`bobs`.`C` = ? or `bobs`.`D` = ? or `bobs`.`E` = ?"
+                    ." or (`bobs`.`F` = ? or (`bobs`.`field_1` = ? and `bobs`.`field_2` = ?))"
+                .") and `bobs`.`field_3` = ?"
         );
     }
 
@@ -176,7 +236,9 @@ class JQLTest extends JQLTestCase
     {
         $this->convertToFluentTest(
             'SimpleJoin.json',
-            "select * from `bobs` inner join `humans` on `humans`.`id` = `bobs`.`human_id` where `bobs`.`field_1` > ? and `humans`.`field_2` > ?"
+            "select * from `bobs`"
+                ." inner join `humans` on `humans`.`id` = `bobs`.`human_id`"
+                ." where `bobs`.`field_1` > ? and `humans`.`field_2` > ?"
         );
     }
 
@@ -184,7 +246,16 @@ class JQLTest extends JQLTestCase
     {
         $this->convertToFluentTest(
             'AdvancedJoin.json',
-            "select * from `bobs` inner join `birds` on `birds`.`id` = `bobs`.`bird_id` inner join `dogs` on `dogs`.`id` = `bobs`.`dog_id` inner join `cats` on `cats`.`bob_id` = `bobs`.`id` where `bobs`.`A` = ? and `bobs`.`B` = ? and (`birds`.`C` = ? or `bobs`.`D` = ? or `bobs`.`E` = ? or (`dogs`.`F` = ? or `dogs`.`G` = ? or (`cats`.`H` = ? and `cats`.`I` = ?))) and `dogs`.`J` = ?"
+            "select * from `bobs`"
+                ." inner join `ggs` on `ggs`.`id` = `bobs_ggs`.`gg_id`"
+                ." inner join `bobs_ggs` on `bobs_ggs`.`bob_id` = `bobs`.`id`"
+                ." inner join `birds` on `birds`.`id` = `bobs`.`bird_id`"
+                ." inner join `dogs` on `dogs`.`id` = `bobs`.`dog_id`"
+                ." inner join `cats` on `cats`.`bob_id` = `bobs`.`id`"
+                ." where `bobs`.`A` = ? and `bobs`.`B` = ? and `ggs`.`gg` = ?"
+                ." and (`birds`.`C` = ? or `bobs`.`D` = ? or `bobs`.`E` = ?"
+                    ." or (`dogs`.`F` = ? or `dogs`.`G` = ? or (`cats`.`H` = ? and `cats`.`I` = ?))"
+                .") and `dogs`.`J` = ?"
         );
     }
 

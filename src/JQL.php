@@ -59,7 +59,7 @@ class JQL
     protected $tableMap = [];
 
     /**
-     * Mapping of field aliases to where in the database they come from
+     * Mapping of field aliases to where in the database they reference
      * ['Record.A' => ['main_table', 'main_table.field_1'], 'Record.B' => ['table_2', 'table_2.json_data->>\'b\'']]
      *
      * @var array
@@ -149,29 +149,30 @@ class JQL
      */
     private function buildQueryOperation($query, $whery, $modelFieldAlias, $operatorAlias, $value)
     {
-        list($field, $table, $modelAlias, $fieldAlias) = $this->convertToModelNameAndField($modelFieldAlias);
+        list($table, $field, $operator) = $this->convertToRealValues($modelFieldAlias, $operatorAlias);
+        $this->joinTableIfNeeded($table);
+        return $this->individualQuery($query, $whery, $table, $field, $operator, $value);
+    }
 
-        if (!in_array($operatorAlias, $this->approvedOperators[$modelAlias][$fieldAlias])) {
-            throw new JQLValidationException($modelFieldAlias.': Operator "'.$operatorAlias.'" Not allowed');
-        }
+    /**
+     * @param string $table
+     */
+    private function joinTableIfNeeded($table)
+    {
+        if (!in_array($table, $this->joinedTables)) {
+            $this->query->join(
+                $table,
+                $this->tableMap[$table][0],
+                '=',
+                $this->tableMap[$table][1]
+            );
 
-        $operator = $this->operatorMap[$operatorAlias];
+            $this->joinedTables[] = $table;
 
-        if ($table != $this->mainModel->getTable()) {
-            if (!in_array($table, $this->joinedTables)) {
-                $this->query->join(
-                    $table,
-                    $this->tableMap[$table][0],
-                    '=',
-                    $this->tableMap[$table][1]
-                );
-                $this->individualQuery($query, $whery, $table, $field, $operator, $value);
-                $this->joinedTables[] = $table;
-                return $query;
+            if (isset($this->tableMap[$table][2])) {
+                $this->joinTableIfNeeded($this->tableMap[$table][2]);
             }
         }
-
-        return $this->individualQuery($query, $whery, $table, $field, $operator, $value);
     }
 
     /**
@@ -186,33 +187,26 @@ class JQL
     private function individualQuery($query, $whery, $table, $field, $operator, $value)
     {
         if ($operator == 'in') {
-            return $query->{$whery.'In'}($table.'.'.$field, $value);
+            return $query->{$whery.'In'}($field, $value);
         }
-        return $query->$whery($table.'.'.$field, $operator, $value);
+        return $query->$whery($field, $operator, $value);
     }
 
     /**
      * @param string $modelFieldAlias
+     * @param string $operatorAlias
      * @return array
      * @throws JQLException
      */
-    private function convertToModelNameAndField($modelFieldAlias)
+    private function convertToRealValues($modelFieldAlias, $operatorAlias)
     {
         $explosions = explode('.', $modelFieldAlias);
         if (count($explosions) == 1) {
-            $table = $this->mainModel->getTable();
             $modelAlias = $this->mainModelAlias;
             $fieldAlias = $explosions[0];
-            $field = $explosions[0];
         } elseif (count($explosions) == 2) {
             $modelAlias = $explosions[0];
             $fieldAlias = $explosions[1];
-            $table = $explosions[0];
-            $modelTable = snake_case(str_plural($this->mainModelName));
-            if ($table == $modelTable) {
-                $table = $this->mainModel->getTable();
-            }
-            $field = $explosions[1];
         } else {
             throw new JQLValidationException('Format must be model.field, eg: mammals.speed');
         }
@@ -222,7 +216,25 @@ class JQL
         ) {
             throw new JQLValidationException($modelFieldAlias.': Not allowed');
         }
-        return [$field, $table, $modelAlias, $fieldAlias];
+
+        if (!in_array($operatorAlias, $this->approvedOperators[$modelAlias][$fieldAlias])) {
+            throw new JQLValidationException($modelFieldAlias.': Operator "'.$operatorAlias.'" not allowed');
+        }
+
+        $table = $modelAlias;
+        $field = $modelAlias . '.' . $fieldAlias;
+        if (isset($this->fieldMap[$modelAlias.'.'.$fieldAlias])) {
+            $table = $this->fieldMap[$modelAlias . '.' . $fieldAlias][0];
+            $field = $this->fieldMap[$modelAlias . '.' . $fieldAlias][1];
+        }
+
+        if (!isset($this->tableMap[$table]) && $table !== $this->mainModel->getTable()) {
+            throw new JQLException($modelFieldAlias.': Could not find way to join table');
+        }
+
+        $operator = $this->operatorMap[$operatorAlias];
+
+        return [$table, $field, $operator];
     }
 
     /**
@@ -237,6 +249,7 @@ class JQL
         $this->mainModelName = $reflection->getShortName();
         $this->query = $mainModel->query();
         $this->mainModelAlias = is_null($mainModelAlias) ? $this->mainModelName : $mainModelAlias;
+        $this->joinedTables = [$mainModel->getTable()];
         return $this;
     }
 
@@ -308,6 +321,9 @@ class JQL
     }
 
     /**
+     * Set mapping of field aliases to where in the database they reference
+     * ['Record.A' => ['main_table', 'main_table.field_1'], 'Record.B' => ['table_2', 'table_2.json_data->>\'b\'']]
+     *
      * @param array $fieldMap
      * @return $this
      */
@@ -317,6 +333,9 @@ class JQL
         return $this;
     }
 
+    /**
+     * @return array
+     */
     public function getFieldMap()
     {
         return $this->fieldMap;

@@ -11,6 +11,11 @@
       "value": "false"
     },
     {
+      "field": "mammals.G",
+      "operator": "eq",
+      "value": "true"
+    },
+    {
       "OR": [
         {
           "field": "birds.C",

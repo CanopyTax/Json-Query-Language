@@ -34,11 +34,6 @@
               "operator": "eq",
               "value": "true"
             },
-            {
-              "field": "mammals.G",
-              "operator": "eq",
-              "value": "true"
-            },
             [
               {
                 "field": "mammals.field_1",

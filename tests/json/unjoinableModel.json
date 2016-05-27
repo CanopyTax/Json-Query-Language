@@ -1,0 +1,9 @@
+{
+  "jql": [
+    {
+      "field": "magic.A",
+      "operator": "eq",
+      "value": true
+    }
+  ]
+}
