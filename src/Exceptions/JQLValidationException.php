@@ -1,6 +1,6 @@
 <?php
 
-namespace Canopy\JQL\Exceptions;
+namespace CanopyTax\JQL\Exceptions;
 
 class JQLValidationException extends JQLException
 {

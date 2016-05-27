@@ -1,8 +1,8 @@
 <?php
-namespace Canopy\JQL;
+namespace CanopyTax\JQL;
 
-use Canopy\JQL\Exceptions\JQLException;
-use Canopy\JQL\Exceptions\JQLValidationException;
+use CanopyTax\JQL\Exceptions\JQLException;
+use CanopyTax\JQL\Exceptions\JQLValidationException;
 use ReflectionClass;
 use stdClass;
 use Illuminate\Database\Eloquent\Builder;

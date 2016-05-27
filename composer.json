@@ -1,15 +1,20 @@
 {
-  "name": "canopy/jql",
+  "name": "CanopyTax/jql",
   "authors": [
     {
       "name": "Skyler Lewis",
       "email": "skyler.lewis@canopytax.com"
+    },
+    {
+      "name": "Tim Redmond",
+      "email": "tim.redmond@canopytax.com"
     }
   ],
   "config": {
     "bin-dir": "./bin"
   },
   "require": {
+    "php": ">=5.6",
     "illuminate/database": "^5.2",
     "illuminate/events": "^5.2"
   },
@@ -20,8 +25,8 @@
   },
   "autoload": {
     "psr-4": {
-      "Canopy\\JQL\\": "src",
-      "Canopy\\Test\\JQL\\": "tests"
+      "CanopyTax\\JQL\\": "src",
+      "CanopyTax\\Test\\JQL\\": "tests"
     }
   }
 }

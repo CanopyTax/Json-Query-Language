@@ -1,9 +1,9 @@
 <?php
-namespace Canopy\Test\JQL;
+namespace CanopyTax\Test\JQL;
 
-use Canopy\JQL\Exceptions\JQLException;
-use Canopy\JQL\Exceptions\JQLValidationException;
-use Canopy\JQL\JQL;
+use CanopyTax\JQL\Exceptions\JQLException;
+use CanopyTax\JQL\Exceptions\JQLValidationException;
+use CanopyTax\JQL\JQL;
 
 class JQLTest extends JQLTestCase
 {

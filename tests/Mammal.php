@@ -1,5 +1,5 @@
 <?php
-namespace Canopy\Test\JQL;
+namespace CanopyTax\Test\JQL;
 
 use Illuminate\Database\Eloquent\Model;
 
