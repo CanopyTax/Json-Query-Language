@@ -45,7 +45,16 @@ class JQLTest extends JQLTestCase
                 'field_2' => ['gt'],
             ],
         ];
-        $this->jql->setApprovedOperators($whitelist);
+
+        $tableMap = [
+            'birds' => ['birds.id', 'bobs.bird_id'],
+            'cats' => ['cats.bob_id', 'bobs.id'],
+            'dogs' => ['dogs.id', 'bobs.dog_id'],
+            'humans' => ['humans.id', 'bobs.human_id'],
+        ];
+
+        $this->jql->setApprovedOperators($whitelist)
+            ->setTableMap($tableMap);
     }
 
     public function testMainModelGetters()
@@ -175,7 +184,7 @@ class JQLTest extends JQLTestCase
     {
         $this->convertToFluentTest(
             'AdvancedJoin.json',
-            "select * from `bobs` inner join `birds` on `birds`.`id` = `bobs`.`bird_id` inner join `dogs` on `dogs`.`id` = `bobs`.`dog_id` inner join `cats` on `cats`.`id` = `bobs`.`cat_id` where `bobs`.`A` = ? and `bobs`.`B` = ? and (`birds`.`C` = ? or `bobs`.`D` = ? or `bobs`.`E` = ? or (`dogs`.`F` = ? or `dogs`.`G` = ? or (`cats`.`H` = ? and `cats`.`I` = ?))) and `dogs`.`J` = ?"
+            "select * from `bobs` inner join `birds` on `birds`.`id` = `bobs`.`bird_id` inner join `dogs` on `dogs`.`id` = `bobs`.`dog_id` inner join `cats` on `cats`.`bob_id` = `bobs`.`id` where `bobs`.`A` = ? and `bobs`.`B` = ? and (`birds`.`C` = ? or `bobs`.`D` = ? or `bobs`.`E` = ? or (`dogs`.`F` = ? or `dogs`.`G` = ? or (`cats`.`H` = ? and `cats`.`I` = ?))) and `dogs`.`J` = ?"
         );
     }
 

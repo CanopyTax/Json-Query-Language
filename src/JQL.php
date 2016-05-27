@@ -161,9 +161,9 @@ class JQL
             if (!in_array($table, $this->joinedTables)) {
                 $this->query->join(
                     $table,
-                    $table.'.id',
+                    $this->tableMap[$table][0],
                     '=',
-                    $this->mainModel->getTable().'.'.str_singular($table).'_id'
+                    $this->tableMap[$table][1]
                 );
                 $this->individualQuery($query, $whery, $table, $field, $operator, $value);
                 $this->joinedTables[] = $table;
