@@ -3,8 +3,6 @@ namespace CanopyTax\Test\JQL;
 
 use PHPUnit_Framework_TestCase;
 use Illuminate\Database\Capsule\Manager as Capsule;
-use Illuminate\Events\Dispatcher;
-use Illuminate\Container\Container;
 
 class JQLTestCase extends PHPUnit_Framework_TestCase
 {
@@ -22,7 +20,6 @@ class JQLTestCase extends PHPUnit_Framework_TestCase
                 'collation' => 'utf8_unicode_ci',
                 'prefix'    => '',
             ]);
-            $capsule->setEventDispatcher(new Dispatcher(new Container()));
             $capsule->setAsGlobal();
             $capsule->bootEloquent();
     }
