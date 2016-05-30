@@ -18,8 +18,8 @@ class JQLTest extends JQLTestCase
 
         $whitelist = [
             'mammals' => [
-                'A' => ['eq'],
-                'B' => ['eq', 'in'],
+                'A' => ['eq', 'ne'],
+                'B' => ['eq', 'in', 'nin'],
                 'C' => ['eq'],
                 'D' => ['eq', 'gt'],
                 'E' => ['eq'],
@@ -59,16 +59,16 @@ class JQLTest extends JQLTestCase
         ];
 
         $fieldMap = [
-            'mammals.A' => ['bobs', 'bobs.A'],
-            'mammals.B' => ['bobs', 'bobs.B'],
-            'mammals.C' => ['bobs', 'bobs.C'],
-            'mammals.D' => ['bobs', 'bobs.D'],
-            'mammals.E' => ['bobs', 'bobs.E'],
-            'mammals.F' => ['bobs', 'bobs.F'],
-            'mammals.G' => ['ggs', 'ggs.gg'],
-            'mammals.field_1' => ['bobs', 'bobs.field_1'],
-            'mammals.field_2' => ['bobs', 'bobs.field_2'],
-            'mammals.field_3' => ['bobs', 'bobs.field_3'],
+            'mammals.A' => ['bobs', '`bobs`.`A`'],
+            'mammals.B' => ['bobs', '`bobs`.`B`'],
+            'mammals.C' => ['bobs', '`bobs`.`C`'],
+            'mammals.D' => ['bobs', '`bobs`.`D`'],
+            'mammals.E' => ['bobs', '`bobs`.`E`'],
+            'mammals.F' => ['bobs', '`bobs`.`F`'],
+            'mammals.G' => ['ggs', '`ggs`.`gg`'],
+            'mammals.field_1' => ['bobs', '`bobs`.`field_1`'],
+            'mammals.field_2' => ['bobs', '`bobs`.`field_2`'],
+            'mammals.field_3' => ['bobs', '`bobs`.`field_3`'],
         ];
 
         $this->jql->setApprovedOperators($whitelist)
@@ -172,7 +172,6 @@ class JQLTest extends JQLTestCase
 
         $json = $this->getJson('invalidOperator.json');
         $this->jql->convertToFluent($json);
-
     }
 
     public function testUnjoinableTable()
@@ -211,6 +210,22 @@ class JQLTest extends JQLTestCase
         );
     }
 
+    public function testEqNull()
+    {
+        $this->convertToFluentTest(
+            'EqNull.json',
+            "select * from `bobs` where `bobs`.`A` is null"
+        );
+    }
+
+    public function testNeNull()
+    {
+        $this->convertToFluentTest(
+            'NeNull.json',
+            "select * from `bobs` where `bobs`.`A` is not null"
+        );
+    }
+
     public function test_A_and_B_in()
     {
         $this->convertToFluentTest(
@@ -219,6 +234,13 @@ class JQLTest extends JQLTestCase
         );
     }
 
+    public function testNin()
+    {
+        $this->convertToFluentTest(
+            'Nin.json',
+            "select * from `bobs` where `bobs`.`B` not in (?, ?, ?)"
+        );
+    }
     public function test_AdvancedNested()
     {
         // A and B and (C or D or E or (F OR (field_1 and field2))) and field_3

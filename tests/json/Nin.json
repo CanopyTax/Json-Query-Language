@@ -1,0 +1,9 @@
+{
+  "jql": [
+    {
+      "field": "B",
+      "operator": "nin",
+      "value": [1, 2, 3]
+    }
+  ]
+}

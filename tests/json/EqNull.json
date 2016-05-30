@@ -1,0 +1,9 @@
+{
+  "jql": [
+    {
+      "field": "A",
+      "operator": "eq",
+      "value": null
+    }
+  ]
+}

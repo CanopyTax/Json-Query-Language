@@ -7,6 +7,7 @@ use ReflectionClass;
 use stdClass;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use DB;
 
 class JQL
 {
@@ -34,6 +35,7 @@ class JQL
         'endswith' => 'endswith',
         'contains' => 'contains',
         'in' => 'in',
+        'nin' => 'not in',
     ];
 
     /**
@@ -59,7 +61,9 @@ class JQL
     protected $tableMap = [];
 
     /**
-     * Mapping of field aliases to where in the database they reference
+     * Mapping of field aliases to where in the database they reference.
+     * An entry only exists if the alias does not match how it is stored in the database.
+     * All fields in this mapping are treated as raw SQL to allow complex queries.
      * ['Record.A' => ['main_table', 'main_table.field_1'], 'Record.B' => ['table_2', 'table_2.json_data->>\'b\'']]
      *
      * @var array
@@ -151,7 +155,7 @@ class JQL
     {
         list($table, $field, $operator) = $this->convertToRealValues($modelFieldAlias, $operatorAlias);
         $this->joinTableIfNeeded($table);
-        return $this->individualQuery($query, $whery, $table, $field, $operator, $value);
+        return $this->individualQuery($query, $whery, $field, $operator, $value);
     }
 
     /**
@@ -178,16 +182,18 @@ class JQL
     /**
      * @param Builder $query
      * @param string $whery
-     * @param string $table
      * @param string $field
      * @param string $operator
      * @param mixed $value
      * @return Builder
      */
-    private function individualQuery($query, $whery, $table, $field, $operator, $value)
+    private function individualQuery($query, $whery, $field, $operator, $value)
     {
-        if ($operator == 'in') {
-            return $query->{$whery.'In'}($field, $value);
+        switch ($operator) {
+            case 'in':
+                return $query->{$whery.'In'}($field, $value);
+            case 'not in':
+                return $query->{$whery.'NotIn'}($field, $value);
         }
         return $query->$whery($field, $operator, $value);
     }
@@ -221,11 +227,12 @@ class JQL
             throw new JQLValidationException($modelFieldAlias.': Operator "'.$operatorAlias.'" not allowed');
         }
 
+        $modelFieldAlias = $modelAlias.'.'.$fieldAlias;
         $table = $modelAlias;
-        $field = $modelAlias . '.' . $fieldAlias;
-        if (isset($this->fieldMap[$modelAlias.'.'.$fieldAlias])) {
-            $table = $this->fieldMap[$modelAlias . '.' . $fieldAlias][0];
-            $field = $this->fieldMap[$modelAlias . '.' . $fieldAlias][1];
+        $field = $modelFieldAlias;
+        if (isset($this->fieldMap[$modelFieldAlias])) {
+            $table = $this->fieldMap[$modelFieldAlias][0];
+            $field = DB::Raw($this->fieldMap[$modelFieldAlias][1]);
         }
 
         if (!isset($this->tableMap[$table]) && $table !== $this->mainModel->getTable()) {
