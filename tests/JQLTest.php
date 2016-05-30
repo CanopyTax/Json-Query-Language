@@ -269,8 +269,8 @@ class JQLTest extends JQLTestCase
         $this->convertToFluentTest(
             'AdvancedJoin.json',
             "select * from `bobs`"
-                ." inner join `ggs` on `ggs`.`id` = `bobs_ggs`.`gg_id`"
                 ." inner join `bobs_ggs` on `bobs_ggs`.`bob_id` = `bobs`.`id`"
+                ." inner join `ggs` on `ggs`.`id` = `bobs_ggs`.`gg_id`"
                 ." inner join `birds` on `birds`.`id` = `bobs`.`bird_id`"
                 ." inner join `dogs` on `dogs`.`id` = `bobs`.`dog_id`"
                 ." inner join `cats` on `cats`.`bob_id` = `bobs`.`id`"

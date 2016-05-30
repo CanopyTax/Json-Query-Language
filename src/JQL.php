@@ -164,6 +164,12 @@ class JQL
     private function joinTableIfNeeded($table)
     {
         if (!in_array($table, $this->joinedTables)) {
+            $this->joinedTables[] = $table;
+
+            if (isset($this->tableMap[$table][2])) {
+                $this->joinTableIfNeeded($this->tableMap[$table][2]);
+            }
+
             $this->query->join(
                 $table,
                 $this->tableMap[$table][0],
@@ -171,11 +177,6 @@ class JQL
                 $this->tableMap[$table][1]
             );
 
-            $this->joinedTables[] = $table;
-
-            if (isset($this->tableMap[$table][2])) {
-                $this->joinTableIfNeeded($this->tableMap[$table][2]);
-            }
         }
     }
 
