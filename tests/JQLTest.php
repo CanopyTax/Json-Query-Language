@@ -1,6 +1,7 @@
 <?php
 namespace CanopyTax\Test\JQL;
 
+use CanopyTax\JQL\Exceptions\JQLDecodeException;
 use CanopyTax\JQL\Exceptions\JQLException;
 use CanopyTax\JQL\Exceptions\JQLValidationException;
 use CanopyTax\JQL\JQL;
@@ -74,6 +75,15 @@ class JQLTest extends JQLTestCase
         $this->jql->setApprovedOperators($whitelist)
             ->setTableMap($tableMap)
             ->setFieldMap($fieldMap);
+    }
+
+    public function testInvalidJson()
+    {
+        $this->expectException(JQLDecodeException::class);
+        $this->expectExceptionCode(JSON_ERROR_SYNTAX);
+        $model = new Mammal();
+        $jql = new JQL($model);
+        $jql->convertToFluent('{');
     }
 
     public function testMainModelGetters()

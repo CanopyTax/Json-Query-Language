@@ -1,6 +1,7 @@
 <?php
 namespace CanopyTax\JQL;
 
+use CanopyTax\JQL\Exceptions\JQLDecodeException;
 use CanopyTax\JQL\Exceptions\JQLException;
 use CanopyTax\JQL\Exceptions\JQLValidationException;
 use ReflectionClass;
@@ -86,6 +87,9 @@ class JQL
     public function convertToFluent($json)
     {
         $json = json_decode($json);
+        if (is_null($json)) {
+            throw new JQLDecodeException();
+        }
         $query = $this->parseJQL($json->jql, $this->query);
 
         return $query;
