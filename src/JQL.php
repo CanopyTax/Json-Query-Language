@@ -81,14 +81,26 @@ class JQL
     }
 
     /**
-     * @param string $json
+     * @param string|object $json
      * @return Builder
+     * @throws JQLDecodeException
+     * @throws JQLException
+     * @throws JQLValidationException
      */
     public function convertToFluent($json)
     {
-        $json = json_decode($json);
-        if (is_null($json)) {
-            throw new JQLDecodeException();
+        if (!is_object($json)) {
+            if (!is_string($json)) {
+                throw new JQLException('JSON string or object was expected');
+            }
+            $json = json_decode($json);
+            if (is_null($json)) {
+                throw new JQLDecodeException();
+            }
+        }
+
+        if (!isset($json->jql)) {
+            throw new JQLException('Missing jql property of JSON');
         }
         $query = $this->parseJQL($json->jql, $this->query);
 

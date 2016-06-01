@@ -236,6 +236,37 @@ class JQLTest extends JQLTestCase
         );
     }
 
+    public function testJsonObjectDecoded()
+    {
+        $json = $this->getJson('EqNull.json');
+        $decoded = json_decode($json);
+        $results = $this->jql->convertToFluent($decoded);
+        $this->assertSame("select * from `bobs` where `bobs`.`A` is null", $results->toSql());
+    }
+
+    public function testJsonArrayDecoded()
+    {
+        $this->expectException(JQLException::class);
+        $this->expectExceptionMessage('JSON string or object was expected');
+        $json = $this->getJson('EqNull.json');
+        $decoded = json_decode($json, true);
+        $this->jql->convertToFluent($decoded);
+    }
+
+    public function testNonJsonObjectDecodedJson()
+    {
+        $this->expectException(JQLException::class);
+        $this->expectExceptionMessage('JSON string or object was expected');
+        $this->jql->convertToFluent(42);
+    }
+
+    public function testJsonMissingJql()
+    {
+        $this->expectException(JQLException::class);
+        $this->expectExceptionMessage('Missing jql property of JSON');
+        $this->jql->convertToFluent(new \stdClass());
+    }
+
     public function test_A_and_B_in()
     {
         $this->convertToFluentTest(
