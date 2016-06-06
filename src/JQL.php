@@ -211,6 +211,11 @@ class JQL
                 return $query->{$whery.'In'}($field, $value);
             case 'not in':
                 return $query->{$whery.'NotIn'}($field, $value);
+            case '!=':
+                if (is_null($value)) {
+                    $boolean = $whery == 'orWhere' ? 'or' : 'and';
+                    return $query->whereNull($field, $boolean, $operator != '=');
+                }
         }
         return $query->$whery($field, $operator, $value);
     }
