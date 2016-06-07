@@ -28,7 +28,7 @@ class JQLTest extends JQLTestCase
                 'field_1' => ['eq', 'gt'],
                 'field_2' => ['lt', 'gt', 'eq', 'ne'],
                 'field_3' => ['eq', 'gt', 'in'],
-                'field_4' => ['eq', 'gt', 'in', 'ne'],
+                'field_4' => ['eq', 'gt', 'in', 'ne', 'between'],
                 'field_5' => ['between'],
             ],
             'birds' => [
@@ -210,6 +210,14 @@ class JQLTest extends JQLTestCase
         $this->convertToFluentTest(
             'CastValueEqNull.json',
             "select * from `bobs` where to_char(to_timestamp((`bobs`.`field_4`)::NUMERIC / 1000), 'MM-DD')) is null"
+        );
+    }
+
+    public function testCastValueInArray()
+    {
+        $this->convertToFluentTest(
+            'CastValueInArray.json',
+            "select * from `bobs` where to_char(to_timestamp((`bobs`.`field_4`)::NUMERIC / 1000), 'MM-DD')) in (to_char(to_timestamp(? / 1000), 'MM-DD'), to_char(to_timestamp(? / 1000), 'MM-DD'))"
         );
     }
 

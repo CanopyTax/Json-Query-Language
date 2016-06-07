@@ -218,12 +218,23 @@ class JQL
     {
         if (is_array($value) && array_key_exists('process', $value)) {
             $originalValue = $value['process'][1];
-            $value = \DB::raw(str_replace('{{value}}', '?', $value['process'][0]));
-            $query->addBinding($originalValue, $whery);
+            $replacementString = $value['process'][0];
+            if (is_array($originalValue)) {
+                $value = [];
+                foreach ($originalValue as $newValue) {
+                    $value[] = \DB::raw(str_replace('{{value}}', '?', $replacementString));
+                    /** @var \Illuminate\Database\Query\Builder $query */
+                    $query->addBinding($newValue, $whery);
+                }
+            } else {
+                $value = \DB::raw(str_replace('{{value}}', '?', $replacementString));
+                $query->addBinding($originalValue, $whery);
+            }
         }
 
         switch ($operator) {
             case 'in':
+                /** @var \Illuminate\Database\Query\Builder $query */
                 return $query->{$whery.'In'}($field, $value);
             case 'not in':
                 return $query->{$whery.'NotIn'}($field, $value);
