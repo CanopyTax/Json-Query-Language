@@ -235,7 +235,10 @@ class JQL
         switch ($operator) {
             case 'in':
                 /** @var \Illuminate\Database\Query\Builder $query */
-                return $query->{$whery.'In'}($field, $value);
+                $bindings = $query->getBindings();
+                $query->{$whery.'In'}($field, $value);
+                $query->setBindings($bindings);
+                return $query;
             case 'not in':
                 return $query->{$whery.'NotIn'}($field, $value);
             case '!=':

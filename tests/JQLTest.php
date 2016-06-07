@@ -217,7 +217,8 @@ class JQLTest extends JQLTestCase
     {
         $this->convertToFluentTest(
             'CastValueInArray.json',
-            "select * from `bobs` where to_char(to_timestamp((`bobs`.`field_4`)::NUMERIC / 1000), 'MM-DD')) in (to_char(to_timestamp(? / 1000), 'MM-DD'), to_char(to_timestamp(? / 1000), 'MM-DD'))"
+            "select * from `bobs` where to_char(to_timestamp((`bobs`.`field_4`)::NUMERIC / 1000), 'MM-DD')) in (to_char(to_timestamp(? / 1000), 'MM-DD'), to_char(to_timestamp(? / 1000), 'MM-DD'))",
+            [1465316562797, 1449878400000]
         );
     }
 
