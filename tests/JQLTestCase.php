@@ -1,5 +1,4 @@
-<?php
-namespace CanopyTax\Test\JQL;
+<?php namespace CanopyTax\Test;
 
 use PHPUnit_Framework_TestCase;
 use Illuminate\Database\Capsule\Manager as Capsule;

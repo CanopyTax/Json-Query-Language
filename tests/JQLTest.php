@@ -1,5 +1,4 @@
-<?php
-namespace CanopyTax\Test\JQL;
+<?php namespace CanopyTax\Test;
 
 use CanopyTax\JQL\Exceptions\JQLDecodeException;
 use CanopyTax\JQL\Exceptions\JQLException;
@@ -29,6 +28,7 @@ class JQLTest extends JQLTestCase
                 'field_1' => ['eq', 'gt'],
                 'field_2' => ['lt', 'gt', 'eq', 'ne'],
                 'field_3' => ['eq', 'gt', 'in'],
+                'field_4' => ['eq', 'gt', 'in'],
             ],
             'birds' => [
                 'C' => ['eq'],
@@ -70,6 +70,7 @@ class JQLTest extends JQLTestCase
             'mammals.field_1' => ['bobs', '`bobs`.`field_1`'],
             'mammals.field_2' => ['bobs', '`bobs`.`field_2`'],
             'mammals.field_3' => ['bobs', '`bobs`.`field_3`'],
+            'mammals.field_4' => ['bobs', 'to_char(to_timestamp((`bobs`.`field_4`)::NUMERIC / 1000), \'MM-DD\'))', 'to_char(to_timestamp({{value}} / 1000), \'MM-DD\')'],
         ];
 
         $this->jql->setApprovedOperators($whitelist)
@@ -191,6 +192,15 @@ class JQLTest extends JQLTestCase
 
         $json = $this->getJson('unjoinableModel.json');
         $this->jql->convertToFluent($json);
+    }
+
+    public function testCastValueInWhereClause()
+    {
+        $this->convertToFluentTest(
+            'CastValue.json',
+            "select * from `bobs` where to_char(to_timestamp((`bobs`.`field_4`)::NUMERIC / 1000), 'MM-DD')) = to_char(to_timestamp(? / 1000), 'MM-DD')",
+            [1465316562797] // Bindings
+        );
     }
 
     public function test_A_or_PB_and_CP()
@@ -322,12 +332,16 @@ class JQLTest extends JQLTestCase
         );
     }
 
-    private function convertToFluentTest($filename, $expected)
+    private function convertToFluentTest($filename, $expected, array $bindings = [])
     {
         $json = $this->getJson($filename);
         $results = $this->jql->convertToFluent($json);
 
         $this->assertSame($expected, $results->toSql());
+
+        if (!empty($bindings)) {
+            $this->assertSame($bindings, $results->getBindings());
+        }
     }
 
     private function getJson($filename)

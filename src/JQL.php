@@ -55,7 +55,8 @@ class JQL
 
     /**
      * Mapping of how all the tables join back to the main table
-     * ['table1' => ['table_1.id', 'main_table.table_1_id], 'table_2' => ['main_table.id', 'table_2.main_table_id]]
+     * ['table1' => ['table_1.id', 'main_table.table_1_id],
+     *           'table_2' => ['main_table.id', 'table_2.main_table_id]]
      *
      * @var array
      */
@@ -65,7 +66,8 @@ class JQL
      * Mapping of field aliases to where in the database they reference.
      * An entry only exists if the alias does not match how it is stored in the database.
      * All fields in this mapping are treated as raw SQL to allow complex queries.
-     * ['Record.A' => ['main_table', 'main_table.field_1'], 'Record.B' => ['table_2', 'table_2.json_data->>\'b\'']]
+     * ['Record.A' => ['main_table', 'main_table.field_1', 'search_term'],
+     *        'Record.B' => ['table_2', 'table_2.json_data->>\'b\'', '{{search_term}}/1000]]
      *
      * @var array
      */
@@ -170,6 +172,13 @@ class JQL
     private function buildQueryOperation($query, $whery, $modelFieldAlias, $operatorAlias, $value)
     {
         list($table, $field, $operator) = $this->convertToRealValues($modelFieldAlias, $operatorAlias);
+
+        if (isset($this->fieldMap[$modelFieldAlias][2])) {
+            $originalValue = $value;
+            $value = [];
+            $value['process'] = [$this->fieldMap[$modelFieldAlias][2], $originalValue];
+        }
+
         $this->joinTableIfNeeded($table);
         return $this->individualQuery($query, $whery, $field, $operator, $value);
     }
@@ -206,6 +215,12 @@ class JQL
      */
     private function individualQuery($query, $whery, $field, $operator, $value)
     {
+        if (is_array($value) && array_key_exists('process', $value)) {
+            $originalValue = $value['process'][1];
+            $value = \DB::raw(str_replace('{{value}}', '?', $value['process'][0]));
+            $query->addBinding($originalValue, $whery);
+        }
+
         switch ($operator) {
             case 'in':
                 return $query->{$whery.'In'}($field, $value);

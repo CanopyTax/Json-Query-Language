@@ -27,7 +27,7 @@
   "autoload": {
     "psr-4": {
       "CanopyTax\\JQL\\": "src",
-      "CanopyTax\\Test\\JQL\\": "tests"
+      "CanopyTax\\Test\\": "tests"
     }
   }
 }
