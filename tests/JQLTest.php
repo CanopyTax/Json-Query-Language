@@ -71,7 +71,7 @@ class JQLTest extends JQLTestCase
             'mammals.field_1' => ['bobs', '`bobs`.`field_1`'],
             'mammals.field_2' => ['bobs', '`bobs`.`field_2`'],
             'mammals.field_3' => ['bobs', '`bobs`.`field_3`'],
-            'mammals.field_4' => ['bobs', 'to_char(to_timestamp((`bobs`.`field_4`)::NUMERIC / 1000), \'MM-DD\'))', 'to_char(to_timestamp({{value}} / 1000), \'MM-DD\')'],
+            'mammals.field_4' => ['bobs', 'to_char(to_timestamp((`bobs`.`field_4`)::NUMERIC / 1000), \'MMDD\'))', 'to_char(to_timestamp({{value}} / 1000), \'MMDD\')'],
             'mammals.field_5' => ['bobs', '`bobs`.`field_5`'],
         ];
 
@@ -200,7 +200,7 @@ class JQLTest extends JQLTestCase
     {
         $this->convertToFluentTest(
             'CastValue.json',
-            "select * from `bobs` where to_char(to_timestamp((`bobs`.`field_4`)::NUMERIC / 1000), 'MM-DD')) = to_char(to_timestamp(? / 1000), 'MM-DD')",
+            "select * from `bobs` where to_char(to_timestamp((`bobs`.`field_4`)::NUMERIC / 1000), 'MMDD')) = to_char(to_timestamp(? / 1000), 'MMDD')",
             [1465316562797] // Bindings
         );
     }
@@ -209,7 +209,7 @@ class JQLTest extends JQLTestCase
     {
         $this->convertToFluentTest(
             'CastValueEqNull.json',
-            "select * from `bobs` where to_char(to_timestamp((`bobs`.`field_4`)::NUMERIC / 1000), 'MM-DD')) is null"
+            "select * from `bobs` where to_char(to_timestamp((`bobs`.`field_4`)::NUMERIC / 1000), 'MMDD')) is null"
         );
     }
 
@@ -217,7 +217,16 @@ class JQLTest extends JQLTestCase
     {
         $this->convertToFluentTest(
             'CastValueInArray.json',
-            "select * from `bobs` where to_char(to_timestamp((`bobs`.`field_4`)::NUMERIC / 1000), 'MM-DD')) in (to_char(to_timestamp(? / 1000), 'MM-DD'), to_char(to_timestamp(? / 1000), 'MM-DD'))",
+            "select * from `bobs` where to_char(to_timestamp((`bobs`.`field_4`)::NUMERIC / 1000), 'MMDD')) in (to_char(to_timestamp(? / 1000), 'MMDD'), to_char(to_timestamp(? / 1000), 'MMDD'))",
+            [1465316562797, 1449878400000]
+        );
+    }
+
+    public function testCastValueBetween()
+    {
+        $this->convertToFluentTest(
+            'Between.json',
+            "select * from `bobs` where (to_char(to_timestamp((`bobs`.`field_4`)::NUMERIC / 1000), 'MMDD')) > to_char(to_timestamp(? / 1000), 'MMDD') and to_char(to_timestamp((`bobs`.`field_4`)::NUMERIC / 1000), 'MMDD')) < to_char(to_timestamp(? / 1000), 'MMDD'))",
             [1465316562797, 1449878400000]
         );
     }
@@ -262,6 +271,14 @@ class JQLTest extends JQLTestCase
         $this->convertToFluentTest(
             'NeNull.json',
             "select * from `bobs` where `bobs`.`A` is not null"
+        );
+    }
+
+    public function testNeValue()
+    {
+        $this->convertToFluentTest(
+            'NeValue.json',
+            "select * from `bobs` where `bobs`.`A` != ?"
         );
     }
 

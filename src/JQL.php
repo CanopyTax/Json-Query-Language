@@ -240,7 +240,19 @@ class JQL
                 $query->setBindings($bindings);
                 return $query;
             case 'not in':
-                return $query->{$whery.'NotIn'}($field, $value);
+                $bindings = $query->getBindings();
+                $query->{$whery.'NotIn'}($field, $value);
+                $query->setBindings($bindings);
+                return $query;
+            case 'between':
+                $bindings = $query->getBindings();
+                $query->$whery(function(Builder $query) use ($field, $value) {
+                    $query->where($field, '>', $value[0]);
+                    $query->where($field, '<', $value[1]);
+                });
+                $query->setBindings($bindings);
+                return $query;
+
             case '!=':
                 if (is_null($value)) {
                     $boolean = $whery == 'orWhere' ? 'or' : 'and';
