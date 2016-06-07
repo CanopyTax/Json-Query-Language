@@ -33,6 +33,7 @@ class JQL
         'eq' => '=',
         'ne' => '!=',
         'beginswith' => 'beginswith',
+        'between' =>  'between',
         'endswith' => 'endswith',
         'contains' => 'contains',
         'in' => 'in',
@@ -173,7 +174,7 @@ class JQL
     {
         list($table, $field, $operator) = $this->convertToRealValues($modelFieldAlias, $operatorAlias);
 
-        if (isset($this->fieldMap[$modelFieldAlias][2])) {
+        if (isset($this->fieldMap[$modelFieldAlias][2]) && !is_null($value)) {
             $originalValue = $value;
             $value = [];
             $value['process'] = [$this->fieldMap[$modelFieldAlias][2], $originalValue];

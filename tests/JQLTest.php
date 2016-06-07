@@ -28,7 +28,8 @@ class JQLTest extends JQLTestCase
                 'field_1' => ['eq', 'gt'],
                 'field_2' => ['lt', 'gt', 'eq', 'ne'],
                 'field_3' => ['eq', 'gt', 'in'],
-                'field_4' => ['eq', 'gt', 'in'],
+                'field_4' => ['eq', 'gt', 'in', 'ne'],
+                'field_5' => ['between'],
             ],
             'birds' => [
                 'C' => ['eq'],
@@ -71,6 +72,7 @@ class JQLTest extends JQLTestCase
             'mammals.field_2' => ['bobs', '`bobs`.`field_2`'],
             'mammals.field_3' => ['bobs', '`bobs`.`field_3`'],
             'mammals.field_4' => ['bobs', 'to_char(to_timestamp((`bobs`.`field_4`)::NUMERIC / 1000), \'MM-DD\'))', 'to_char(to_timestamp({{value}} / 1000), \'MM-DD\')'],
+            'mammals.field_5' => ['bobs', '`bobs`.`field_5`'],
         ];
 
         $this->jql->setApprovedOperators($whitelist)
@@ -200,6 +202,14 @@ class JQLTest extends JQLTestCase
             'CastValue.json',
             "select * from `bobs` where to_char(to_timestamp((`bobs`.`field_4`)::NUMERIC / 1000), 'MM-DD')) = to_char(to_timestamp(? / 1000), 'MM-DD')",
             [1465316562797] // Bindings
+        );
+    }
+
+    public function testCastValueInWhereClauseIsNull()
+    {
+        $this->convertToFluentTest(
+            'CastValueEqNull.json',
+            "select * from `bobs` where to_char(to_timestamp((`bobs`.`field_4`)::NUMERIC / 1000), 'MM-DD')) is null"
         );
     }
 
