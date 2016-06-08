@@ -308,7 +308,7 @@ class JQLTest extends JQLTestCase
 
     public function testJsonMissingJql()
     {
-        $this->expectException(JQLException::class);
+        $this->expectException(JQLValidationException::class);
         $this->expectExceptionMessage('Missing jql property of JSON');
         $this->jql->convertToFluent(new \stdClass());
     }

@@ -103,7 +103,7 @@ class JQL
         }
 
         if (!isset($json->jql)) {
-            throw new JQLException('Missing jql property of JSON');
+            throw new JQLValidationException('Missing jql property of JSON');
         }
         $query = $this->parseJQL($json->jql, $this->query);
 
