@@ -237,12 +237,16 @@ class JQL
                 /** @var \Illuminate\Database\Query\Builder $query */
                 $bindings = $query->getBindings();
                 $query->{$whery.'In'}($field, $value);
-                $query->setBindings($bindings);
+                if (!empty($bindings)) {
+                    $query->setBindings($bindings);
+                }
                 return $query;
             case 'not in':
                 $bindings = $query->getBindings();
                 $query->{$whery.'NotIn'}($field, $value);
-                $query->setBindings($bindings);
+                if (!empty($bindings)) {
+                    $query->setBindings($bindings);
+                }
                 return $query;
             case 'between':
                 $bindings = $query->getBindings();
@@ -250,7 +254,9 @@ class JQL
                     $query->where($field, '>', $value[0]);
                     $query->where($field, '<', $value[1]);
                 });
-                $query->setBindings($bindings);
+                if (!empty($bindings)) {
+                    $query->setBindings($bindings);
+                }
                 return $query;
 
             case '!=':
