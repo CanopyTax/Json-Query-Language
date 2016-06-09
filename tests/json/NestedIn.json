@@ -1,0 +1,14 @@
+{
+  "jql": [
+    {
+      "field": "mammals.field_1",
+      "operator": "gt",
+      "value": "A"
+    },
+    {
+      "field": "mammals.field_3",
+      "operator": "in",
+      "value": ["A", "B"]
+    }
+  ]
+}

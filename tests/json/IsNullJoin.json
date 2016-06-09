@@ -1,0 +1,15 @@
+{
+  "jql": [
+    {
+
+      "field": "mammals.field_1",
+      "operator": "gt",
+      "value": "A"
+    },
+    {
+      "field": "mammals.GA",
+      "operator": "eq",
+      "value": null
+    }
+  ]
+}

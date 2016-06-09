@@ -172,6 +172,11 @@ class JQL
      */
     private function buildQueryOperation($query, $whery, $modelFieldAlias, $operatorAlias, $value)
     {
+        if (array_key_exists($modelFieldAlias, $this->fieldMap) && (strpos($this->fieldMap[$modelFieldAlias][1], ' and ') !== false || strpos($this->fieldMap[$modelFieldAlias][1], ' AND ') !== false)) {
+            if (is_null($value)) {
+                $this->fieldMap[$modelFieldAlias][1] = preg_replace("/^(?:(.*)\s=\s.*)AND/i", "$1 is null AND", $this->fieldMap[$modelFieldAlias][1]);
+            }
+        }
         list($table, $field, $operator) = $this->convertToRealValues($modelFieldAlias, $operatorAlias);
 
         if (isset($this->fieldMap[$modelFieldAlias][2]) && !is_null($value)) {
@@ -180,27 +185,33 @@ class JQL
             $value['process'] = [$this->fieldMap[$modelFieldAlias][2], $originalValue];
         }
 
-        $this->joinTableIfNeeded($table);
+        $joinType = (is_null($value)) ? 'left' : 'inner';
+        $this->joinTableIfNeeded($table, $joinType);
         return $this->individualQuery($query, $whery, $field, $operator, $value);
     }
 
     /**
      * @param string $table
+     * @param string $joinType
+     * @return mixed
      */
-    private function joinTableIfNeeded($table)
+    private function joinTableIfNeeded($table, $joinType = 'inner')
     {
         if (!in_array($table, $this->joinedTables)) {
             $this->joinedTables[] = $table;
 
             if (isset($this->tableMap[$table][2])) {
-                $this->joinTableIfNeeded($this->tableMap[$table][2]);
+                $this->joinTableIfNeeded($this->tableMap[$table][2], $joinType);
             }
 
-            $this->query->join(
+            /* @var \Illuminate\Database\Query\Builder $query */
+            $query = $this->query;
+            $query->join(
                 $table,
                 $this->tableMap[$table][0],
                 '=',
-                $this->tableMap[$table][1]
+                $this->tableMap[$table][1],
+                $joinType
             );
 
         }
@@ -234,28 +245,45 @@ class JQL
 
         switch ($operator) {
             case 'in':
-                /** @var \Illuminate\Database\Query\Builder $query */
-                $bindings = $query->getBindings();
                 $query->{$whery.'In'}($field, $value);
+                $bindings = $query->getBindings();
+                $newBindings = [];
+                foreach ($bindings as $binding) {
+                    if (!is_object($binding)) {
+                        $newBindings[] = $binding;
+                    }
+                }
                 if (!empty($bindings)) {
-                    $query->setBindings($bindings);
+                    $query->setBindings($newBindings);
                 }
                 return $query;
             case 'not in':
-                $bindings = $query->getBindings();
                 $query->{$whery.'NotIn'}($field, $value);
+                $bindings = $query->getBindings();
+                $newBindings = [];
+                foreach ($bindings as $binding) {
+                    if (!is_object($binding)) {
+                        $newBindings[] = $binding;
+                    }
+                }
                 if (!empty($bindings)) {
-                    $query->setBindings($bindings);
+                    $query->setBindings($newBindings);
                 }
                 return $query;
             case 'between':
-                $bindings = $query->getBindings();
                 $query->$whery(function(Builder $query) use ($field, $value) {
                     $query->where($field, '>', $value[0]);
                     $query->where($field, '<', $value[1]);
                 });
+                $bindings = $query->getBindings();
+                $newBindings = [];
+                foreach ($bindings as $binding) {
+                    if (!is_object($binding)) {
+                        $newBindings[] = $binding;
+                    }
+                }
                 if (!empty($bindings)) {
-                    $query->setBindings($bindings);
+                    $query->setBindings($newBindings);
                 }
                 return $query;
 

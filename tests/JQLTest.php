@@ -25,6 +25,7 @@ class JQLTest extends JQLTestCase
                 'E' => ['eq'],
                 'F' => ['eq'],
                 'G' => ['eq'],
+                'GA' => ['eq'],
                 'field_1' => ['eq', 'gt'],
                 'field_2' => ['lt', 'gt', 'eq', 'ne'],
                 'field_3' => ['eq', 'gt', 'in'],
@@ -68,6 +69,7 @@ class JQLTest extends JQLTestCase
             'mammals.E' => ['bobs', '`bobs`.`E`'],
             'mammals.F' => ['bobs', '`bobs`.`F`'],
             'mammals.G' => ['ggs', '`ggs`.`gg`'],
+            'mammals.GA' => ['ggs', 'bobs_ggs.relationship_type = \'contacts\' AND `ggs`.`gg`'],
             'mammals.field_1' => ['bobs', '`bobs`.`field_1`'],
             'mammals.field_2' => ['bobs', '`bobs`.`field_2`'],
             'mammals.field_3' => ['bobs', '`bobs`.`field_3`'],
@@ -338,6 +340,27 @@ class JQLTest extends JQLTestCase
                 ." and (`bobs`.`C` = ? or `bobs`.`D` = ? or `bobs`.`E` = ?"
                     ." or (`bobs`.`F` = ? or (`bobs`.`field_1` = ? and `bobs`.`field_2` = ?))"
                 .") and `bobs`.`field_3` = ?"
+        );
+    }
+
+    public function test_join_where_join_condition_is_null()
+    {
+        $this->convertToFluentTest(
+            'IsNullJoin.json',
+            "select * from `bobs`"
+            ." left join `bobs_ggs` on `bobs_ggs`.`bob_id` = `bobs`.`id`"
+            ." left join `ggs` on `ggs`.`id` = `bobs_ggs`.`gg_id`"
+            ." where `bobs`.`field_1` > ? and bobs_ggs.relationship_type is null AND `ggs`.`gg` is null",
+            ["A"]
+        );
+    }
+
+    public function test_in_array_as_second_node()
+    {
+        $this->convertToFluentTest(
+            'NestedIn.json',
+            "select * from `bobs` where `bobs`.`field_1` > ? and `bobs`.`field_3` in (?, ?)",
+            ["A", "A", "B"]
         );
     }
 
