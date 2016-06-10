@@ -2,6 +2,7 @@
 
 ## JQL - Json Query Language
 
+
 JQL is a json query language.
 
 A single query looks like:
