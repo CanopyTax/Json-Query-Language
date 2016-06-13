@@ -1,0 +1,9 @@
+{
+  "jql": [
+    {
+      "field": "field_ts",
+      "operator": "eq",
+      "value": 1465561879
+    }
+  ]
+}

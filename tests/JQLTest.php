@@ -31,6 +31,7 @@ class JQLTest extends JQLTestCase
                 'field_3' => ['eq', 'gt', 'in'],
                 'field_4' => ['eq', 'gt', 'in', 'ne', 'between'],
                 'field_5' => ['between'],
+                'field_ts' => ['eq'],
             ],
             'birds' => [
                 'C' => ['eq'],
@@ -75,6 +76,7 @@ class JQLTest extends JQLTestCase
             'mammals.field_3' => ['bobs', '`bobs`.`field_3`'],
             'mammals.field_4' => ['bobs', 'to_char(to_timestamp((`bobs`.`field_4`)::NUMERIC / 1000), \'MMDD\'))', 'to_char(to_timestamp({{value}} / 1000), \'MMDD\')'],
             'mammals.field_5' => ['bobs', '`bobs`.`field_5`'],
+            'mammals.field_ts' => ['bobs', '`bobs`.`field_ts`', 'to_timestamp({{value}})'],
         ];
 
         $this->jql->setApprovedOperators($whitelist)
@@ -196,6 +198,15 @@ class JQLTest extends JQLTestCase
 
         $json = $this->getJson('unjoinableModel.json');
         $this->jql->convertToFluent($json);
+    }
+
+    public function testCastValueWithFieldOnly()
+    {
+        $this->convertToFluentTest(
+            'CastValueWithFieldOnly.json',
+            "select * from `bobs` where `bobs`.`field_ts` = to_timestamp(?)",
+            [1465561879]
+        );
     }
 
     public function testCastValueInWhereClause()

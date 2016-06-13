@@ -177,7 +177,7 @@ class JQL
                 $this->fieldMap[$modelFieldAlias][1] = preg_replace("/^(?:(.*)\s=\s.*)AND/i", "$1 is null AND", $this->fieldMap[$modelFieldAlias][1]);
             }
         }
-        list($table, $field, $operator) = $this->convertToRealValues($modelFieldAlias, $operatorAlias);
+        list($table, $field, $operator, $modelFieldAlias) = $this->convertToRealValues($modelFieldAlias, $operatorAlias);
 
         if (isset($this->fieldMap[$modelFieldAlias][2]) && !is_null($value)) {
             $originalValue = $value;
@@ -339,7 +339,7 @@ class JQL
 
         $operator = $this->operatorMap[$operatorAlias];
 
-        return [$table, $field, $operator];
+        return [$table, $field, $operator, $modelFieldAlias];
     }
 
     /**
