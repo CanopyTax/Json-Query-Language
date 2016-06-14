@@ -213,14 +213,14 @@ class JQL
                 array_key_exists($overrideOperator = 'any', $this->fieldOverrideMap[$modelFieldAlias])
             ) {
                 $override = $this->fieldOverrideMap[$modelFieldAlias][$overrideOperator];
-                if ((strpos($override['field'], ' and ') !== false || strpos($override['field'], ' AND ') !== false)) {
-                    if (is_null($value)) {
-                        $override['field'] = preg_replace("/^(?:(.*)\s=\s.*)AND/i", "$1 is null AND", $override['field']);
-                    }
-                }
 
                 // Field
                 if (array_key_exists('field', $override)) {
+                    if ((strpos($override['field'], ' and ') !== false || strpos($override['field'], ' AND ') !== false)) {
+                        if (is_null($value)) {
+                            $override['field'] = preg_replace("/^(?:(.*)\s=\s.*)AND/i", "$1 is null AND", $override['field']);
+                        }
+                    }
                     $newField = \DB::raw(str_replace('{{field}}', $this->fieldMap[$modelFieldAlias][1], $override['field']));
                 }
 
@@ -261,8 +261,7 @@ class JQL
      * @return array
      */
     public function replaceValue($override, $value) {
-        \DB::raw(str_replace('{{value}}', '?', $override['value']));
-        $newValues = $value;
+        $newValues = \DB::raw(str_replace('{{value}}', '?', $override['value']));
         if (is_array($override['value'])) {
             $value = is_null($value) ? 'null' : $value;
             if (
@@ -325,16 +324,6 @@ class JQL
                     $query->where($field, '>', $value[0]);
                     $query->where($field, '<', $value[1]);
                 });
-                $bindings = $query->getBindings();
-                $newBindings = [];
-                foreach ($bindings as $binding) {
-                    if (!is_object($binding)) {
-                        $newBindings[] = $binding;
-                    }
-                }
-                if (!empty($bindings)) {
-                    $query->setBindings($newBindings);
-                }
                 return $query;
         }
 

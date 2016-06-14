@@ -1,7 +1,7 @@
 {
   "jql": [
     {
-      "field": "field_ts",
+      "field": "mammals.field_ts",
       "operator": "eq",
       "value": 1465561879
     }

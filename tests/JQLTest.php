@@ -76,10 +76,15 @@ class JQLTest extends JQLTestCase
             'mammals.field_3' => ['bobs', '`bobs`.`field_3`'],
             'mammals.field_4' => ['bobs', '`bobs`.`field_4`'],
             'mammals.field_5' => ['bobs', '`bobs`.`field_5`'],
-            'mammals.field_ts' => ['bobs', '`bobs`.`field_ts`', 'to_timestamp({{value}})'],
+            'mammals.field_ts' => ['bobs', '`bobs`.`field_ts`'],
         ];
 
         $overrideMap = [
+            'mammals.field_ts' =>  [
+                'any' =>  [
+                    'value' => 'to_timestamp({{value}})'
+                ]
+            ],
             'mammals.GA' =>  [
                 'any' =>  [
                     'field' => 'bobs_ggs.relationship_type = \'contacts\' AND {{field}}',
