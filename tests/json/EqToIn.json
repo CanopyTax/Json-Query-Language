@@ -1,0 +1,9 @@
+{
+  "jql": [
+    {
+      "field": "mammals.to_in",
+      "operator": "eq",
+      "value": "bobalina"
+    }
+  ]
+}

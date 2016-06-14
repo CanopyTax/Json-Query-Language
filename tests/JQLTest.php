@@ -33,6 +33,7 @@ class JQLTest extends JQLTestCase
                 'field_4' => ['eq', 'gt', 'in', 'ne', 'between'],
                 'field_5' => ['between'],
                 'field_ts' => ['eq'],
+                'to_in' => ['eq', 'in'],
             ],
             'birds' => [
                 'C' => ['eq'],
@@ -79,9 +80,16 @@ class JQLTest extends JQLTestCase
             'mammals.field_4' => ['bobs', '`bobs`.`field_4`'],
             'mammals.field_5' => ['bobs', '`bobs`.`field_5`'],
             'mammals.field_ts' => ['bobs', '`bobs`.`field_ts`'],
+            'mammals.to_in' => ['bobs', '`bobs`.`to_in`'],
         ];
 
         $overrideMap = [
+            'mammals.to_in' => [
+                'eq' => [
+                    'operator' => 'in',
+                    'value' => '{{value}}'
+                ]
+            ],
             'mammals.field_ts' =>  [
                 'any' =>  [
                     'value' => 'to_timestamp({{value}})'
@@ -250,6 +258,14 @@ class JQLTest extends JQLTestCase
             'CastValueWithFieldOnly.json',
             "select * from `bobs` where `bobs`.`field_ts` = to_timestamp(?)",
             [1465561879]
+        );
+    }
+
+    public function testConvertEqToIn() {
+        $this->convertToFluentTest(
+            'EqToIn.json',
+            "select * from `bobs` where `bobs`.`to_in` in (?)",
+            ['bobalina']
         );
     }
 

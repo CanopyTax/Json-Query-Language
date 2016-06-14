@@ -315,9 +315,15 @@ class JQL
     {
         switch ($operator) {
             case 'in':
+                if (($value instanceof Expression)) {
+                    $value = [$value];
+                }
                 $query->{$whery.'In'}($field, $value);
                 return $query;
             case 'not in':
+                if (($value instanceof Expression)) {
+                    $value = [$value];
+                }
                 $query->{$whery.'NotIn'}($field, $value);
                 return $query;
             case 'between':
