@@ -217,12 +217,22 @@ class JQL
 
                 // Field
                 if (array_key_exists('field', $override)) {
-                    if ((strpos($override['field'], ' and ') !== false || strpos($override['field'], ' AND ') !== false)) {
+                    $fieldOverride = $override['field'];
+                    if (
+                        is_array($override['field']) && (
+                            ( !is_array($value) && array_key_exists($key = (is_null($value) ? 'null' : (is_bool($value) ? boolval($value) : $value)), $override['field'])) ||
+                            array_key_exists($key = 'any', $override['field'])
+                        )
+                    ) {
+                        $fieldOverride = $override['field'][$key];
+                    }
+                    if ((strpos($fieldOverride, ' and ') !== false || strpos($fieldOverride, ' AND ') !== false)) {
                         if (is_null($value)) {
-                            $override['field'] = preg_replace("/^(?:(.*)\s=\s.*)AND/i", "$1 is null AND", $override['field']);
+                            $fieldOverride = preg_replace("/^(?:(.*)\s=\s.*)AND/i", "$1 is null AND", $fieldOverride);
                         }
                     }
-                    $newField = \DB::raw(str_replace('{{field}}', $this->fieldMap[$modelFieldAlias][1], $override['field']));
+                    $newField = \DB::raw(str_replace('{{field}}', $this->fieldMap[$modelFieldAlias][1], $fieldOverride));
+
                 }
 
                 // Operator
@@ -313,36 +323,43 @@ class JQL
      */
     private function individualQuery($query, $whery, $field, $operator, $value)
     {
-        switch ($operator) {
-            case 'in':
-                if (($value instanceof Expression)) {
-                    $value = [$value];
-                }
-                $query->{$whery.'In'}($field, $value);
-                return $query;
-            case 'not in':
-                if (($value instanceof Expression)) {
-                    $value = [$value];
-                }
-                $query->{$whery.'NotIn'}($field, $value);
-                return $query;
-            case 'between':
-                $query->$whery(function(Builder $query) use ($field, $value) {
-                    $query->where($field, '>', $value[0]);
-                    $query->where($field, '<', $value[1]);
-                });
-                return $query;
-        }
-
         /** @var \Illuminate\Database\Query\Expression $value */
         if (is_null($value) || $value === "is null" || ($value instanceof Expression && $value->getValue() === "is null")) {
             $boolean = $whery == 'orWhere' ? 'or' : 'and';
+            if (in_array($operator, ['in', 'nin'])) {
+                $operator = ($operator === 'in') ? '=' : '!=';
+            }
             return $query->whereNull($field, $boolean, $operator != '=');
+        } else {
+            switch ($operator) {
+                case 'in':
+                    if (!is_array($value)) {
+                        $value = [$value];
+                    }
+                    $query->{$whery . 'In'}($field, $value);
+
+                    return $query;
+                case 'not in':
+                    if (!is_array($value)) {
+                        $value = [$value];
+                    }
+                    $query->{$whery . 'NotIn'}($field, $value);
+
+                    return $query;
+                case 'between':
+                    $query->$whery(function (Builder $query) use ($field, $value) {
+                        $query->where($field, '>', $value[0]);
+                        $query->where($field, '<', $value[1]);
+                    });
+
+                    return $query;
+            }
         }
 
         if (is_bool($value)) {
             $value = ($value) ? 'true' : 'false';
         }
+
         return $query->$whery($field, $operator, $value);
     }
 

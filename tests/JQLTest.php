@@ -87,7 +87,6 @@ class JQLTest extends JQLTestCase
             'mammals.to_in' => [
                 'eq' => [
                     'operator' => 'in',
-                    'value' => '{{value}}'
                 ]
             ],
             'mammals.field_ts' =>  [
