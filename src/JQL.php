@@ -4,6 +4,7 @@ namespace CanopyTax\JQL;
 use CanopyTax\JQL\Exceptions\JQLDecodeException;
 use CanopyTax\JQL\Exceptions\JQLException;
 use CanopyTax\JQL\Exceptions\JQLValidationException;
+use Illuminate\Database\Query\Expression;
 use ReflectionClass;
 use stdClass;
 use Illuminate\Database\Eloquent\Builder;
@@ -327,9 +328,14 @@ class JQL
                 return $query;
         }
 
-        if (is_null($value) || $value == 'is null') {
+        /** @var \Illuminate\Database\Query\Expression $value */
+        if (is_null($value) || $value === "is null" || ($value instanceof Expression && $value->getValue() === "is null")) {
             $boolean = $whery == 'orWhere' ? 'or' : 'and';
             return $query->whereNull($field, $boolean, $operator != '=');
+        }
+
+        if (is_bool($value)) {
+            $value = ($value) ? 'true' : 'false';
         }
         return $query->$whery($field, $operator, $value);
     }

@@ -253,6 +253,15 @@ class JQLTest extends JQLTestCase
         );
     }
 
+    public function testCaseEqTrue()
+    {
+        $this->convertToFluentTest(
+            'EqTrue.json',
+            "select * from `bobs` where `bobs`.`field_1` = ?",
+            ['true']
+        );
+    }
+
     public function testCastValueInWhereClause()
     {
         $this->convertToFluentTest(

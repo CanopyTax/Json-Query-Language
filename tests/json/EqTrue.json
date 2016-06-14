@@ -1,0 +1,9 @@
+{
+  "jql": [
+    {
+      "field": "mammals.field_1",
+      "operator": "eq",
+      "value": true
+    }
+  ]
+}
