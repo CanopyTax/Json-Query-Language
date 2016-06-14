@@ -74,6 +74,14 @@ class JQL
      */
     protected $fieldMap = [];
 
+    /*
+     * Mapping of fields and their potential ovveride paterns.
+     *
+     * //below function is a placeholder, a special todo that would be nice.
+     * ['fieldname' => ['operator' => ['field' =>  'fieldname', 'operator' =>  'newOperator', 'value' =>  'newValue'|funciton(field, operator, value) ]]]
+     */
+    protected $fieldOverrideMap = [];
+
     /**
      * @param Model $mainModel
      * @param string $mainModelAlias
@@ -158,6 +166,16 @@ class JQL
             $count++;
         }
 
+        $bindings = $query->getBindings();
+        $newBindings = [];
+        foreach ($bindings as $binding) {
+            if (!is_object($binding) && !is_null($binding) && $binding != 'null') {
+                $newBindings[] = $binding;
+            }
+
+        }
+        $query->setBindings($newBindings);
+
         return $query;
     }
 
@@ -172,22 +190,90 @@ class JQL
      */
     private function buildQueryOperation($query, $whery, $modelFieldAlias, $operatorAlias, $value)
     {
-        if (array_key_exists($modelFieldAlias, $this->fieldMap) && (strpos($this->fieldMap[$modelFieldAlias][1], ' and ') !== false || strpos($this->fieldMap[$modelFieldAlias][1], ' AND ') !== false)) {
-            if (is_null($value)) {
-                $this->fieldMap[$modelFieldAlias][1] = preg_replace("/^(?:(.*)\s=\s.*)AND/i", "$1 is null AND", $this->fieldMap[$modelFieldAlias][1]);
-            }
-        }
-        list($table, $field, $operator, $modelFieldAlias) = $this->convertToRealValues($modelFieldAlias, $operatorAlias);
-
-        if (isset($this->fieldMap[$modelFieldAlias][2]) && !is_null($value)) {
-            $originalValue = $value;
-            $value = [];
-            $value['process'] = [$this->fieldMap[$modelFieldAlias][2], $originalValue];
-        }
-
+        list($table, $field, $operator) = $this->convertToRealValues($modelFieldAlias, $operatorAlias);
         $joinType = (is_null($value)) ? 'left' : 'inner';
+        list($field, $value, $operator, $bindings) = $this->overrideKeys($modelFieldAlias, $value, $operatorAlias, $field);
+        if (!empty($bindings)) {
+            /** @var \Illuminate\Database\Query\Builder $query */
+            $query->addBinding($bindings, $whery);
+        }
+
         $this->joinTableIfNeeded($table, $joinType);
         return $this->individualQuery($query, $whery, $field, $operator, $value);
+    }
+
+    public function overrideKeys($modelFieldAlias, $value, $operatorAlias, $field) {
+        $bindings = [];
+        $newField = \DB::raw($field);
+        $newOperator = $operatorAlias;
+        $newValues = $value;
+        if (array_key_exists($modelFieldAlias, $this->fieldOverrideMap)) {
+            if (
+                array_key_exists($overrideOperator = $operatorAlias, $this->fieldOverrideMap[$modelFieldAlias]) ||
+                array_key_exists($overrideOperator = 'any', $this->fieldOverrideMap[$modelFieldAlias])
+            ) {
+                $override = $this->fieldOverrideMap[$modelFieldAlias][$overrideOperator];
+                if ((strpos($override['field'], ' and ') !== false || strpos($override['field'], ' AND ') !== false)) {
+                    if (is_null($value)) {
+                        $override['field'] = preg_replace("/^(?:(.*)\s=\s.*)AND/i", "$1 is null AND", $override['field']);
+                    }
+                }
+
+                // Field
+                if (array_key_exists('field', $override)) {
+                    $newField = \DB::raw(str_replace('{{field}}', $this->fieldMap[$modelFieldAlias][1], $override['field']));
+                }
+
+                // Operator
+                if (array_key_exists('operator', $override)) {
+                    $newOperator = $override['operator'];
+                    list($eTable, $eField) = explode('.', $modelFieldAlias);
+                    if (!isset($this->approvedOperators[$eTable]) ||
+                        !isset($this->approvedOperators[$eTable][$eField]) ||
+                        !in_array($newOperator, $this->approvedOperators[$eTable][$eField])
+                    ) {
+                        throw new JQLValidationException($newOperator.': Not allowed');
+                    }
+                }
+
+                // Value
+                if (array_key_exists('value', $override)) {
+                    if (is_array($value)) {
+                        $newValues = [];
+                        foreach ($value as $item) {
+                            list($newValue, $value) = $this->replaceValue($override, $value);
+                            $newValues[] = $newValue;
+                            $bindings[] = $item;
+                        }
+                    } else {
+                        list($newValues, $value) = $this->replaceValue($override, $value);
+                        $bindings[] = $value;
+                    }
+                }
+            }
+        }
+        return [$newField, $newValues, $this->operatorMap[$newOperator], $bindings];
+    }
+
+    /**
+     * @param $override
+     * @param $value
+     * @return array
+     */
+    public function replaceValue($override, $value) {
+        \DB::raw(str_replace('{{value}}', '?', $override['value']));
+        $newValues = $value;
+        if (is_array($override['value'])) {
+            $value = is_null($value) ? 'null' : $value;
+            if (
+                !is_array($value) &&
+                array_key_exists($replacer = strtolower($value), $override['value']) ||
+                array_key_exists($replacer = 'any', $override['value'])
+            ) {
+                $newValues = \DB::raw(str_replace('{{value}}', '?', $override['value'][$replacer]));
+            }
+        }
+        return [$newValues, $value];
     }
 
     /**
@@ -218,7 +304,7 @@ class JQL
     }
 
     /**
-     * @param Builder $query
+     * @param Builder|\Illuminate\Database\Query\Builder $query
      * @param string $whery
      * @param string $field
      * @param string $operator
@@ -227,48 +313,12 @@ class JQL
      */
     private function individualQuery($query, $whery, $field, $operator, $value)
     {
-        if (is_array($value) && array_key_exists('process', $value)) {
-            $originalValue = $value['process'][1];
-            $replacementString = $value['process'][0];
-            if (is_array($originalValue)) {
-                $value = [];
-                foreach ($originalValue as $newValue) {
-                    $value[] = \DB::raw(str_replace('{{value}}', '?', $replacementString));
-                    /** @var \Illuminate\Database\Query\Builder $query */
-                    $query->addBinding($newValue, $whery);
-                }
-            } else {
-                $value = \DB::raw(str_replace('{{value}}', '?', $replacementString));
-                $query->addBinding($originalValue, $whery);
-            }
-        }
-
         switch ($operator) {
             case 'in':
                 $query->{$whery.'In'}($field, $value);
-                $bindings = $query->getBindings();
-                $newBindings = [];
-                foreach ($bindings as $binding) {
-                    if (!is_object($binding)) {
-                        $newBindings[] = $binding;
-                    }
-                }
-                if (!empty($bindings)) {
-                    $query->setBindings($newBindings);
-                }
                 return $query;
             case 'not in':
                 $query->{$whery.'NotIn'}($field, $value);
-                $bindings = $query->getBindings();
-                $newBindings = [];
-                foreach ($bindings as $binding) {
-                    if (!is_object($binding)) {
-                        $newBindings[] = $binding;
-                    }
-                }
-                if (!empty($bindings)) {
-                    $query->setBindings($newBindings);
-                }
                 return $query;
             case 'between':
                 $query->$whery(function(Builder $query) use ($field, $value) {
@@ -286,12 +336,11 @@ class JQL
                     $query->setBindings($newBindings);
                 }
                 return $query;
+        }
 
-            case '!=':
-                if (is_null($value)) {
-                    $boolean = $whery == 'orWhere' ? 'or' : 'and';
-                    return $query->whereNull($field, $boolean, $operator != '=');
-                }
+        if (is_null($value) || $value == 'is null') {
+            $boolean = $whery == 'orWhere' ? 'or' : 'and';
+            return $query->whereNull($field, $boolean, $operator != '=');
         }
         return $query->$whery($field, $operator, $value);
     }
@@ -327,10 +376,11 @@ class JQL
 
         $modelFieldAlias = $modelAlias.'.'.$fieldAlias;
         $table = $modelAlias;
-        $field = $modelFieldAlias;
         if (isset($this->fieldMap[$modelFieldAlias])) {
             $table = $this->fieldMap[$modelFieldAlias][0];
-            $field = DB::Raw($this->fieldMap[$modelFieldAlias][1]);
+            $field = $this->fieldMap[$modelFieldAlias][1];
+        } else {
+            $field = '`'.$modelAlias.'`.`'.$fieldAlias.'`';
         }
 
         if (!isset($this->tableMap[$table]) && $table !== $this->mainModel->getTable()) {
@@ -338,8 +388,7 @@ class JQL
         }
 
         $operator = $this->operatorMap[$operatorAlias];
-
-        return [$table, $field, $operator, $modelFieldAlias];
+        return [$table, $field, $operator];
     }
 
     /**
@@ -444,5 +493,23 @@ class JQL
     public function getFieldMap()
     {
         return $this->fieldMap;
+    }
+
+    /**
+     * @return array
+     */
+    public function getFieldOverrideMap()
+    {
+        return $this->fieldOverrideMap;
+    }
+
+    /**
+     * @param array $fieldOverrideMap
+     * @return $this
+     */
+    public function setFieldOverrideMap($fieldOverrideMap)
+    {
+        $this->fieldOverrideMap = $fieldOverrideMap;
+        return $this;
     }
 }

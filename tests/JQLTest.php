@@ -70,18 +70,40 @@ class JQLTest extends JQLTestCase
             'mammals.E' => ['bobs', '`bobs`.`E`'],
             'mammals.F' => ['bobs', '`bobs`.`F`'],
             'mammals.G' => ['ggs', '`ggs`.`gg`'],
-            'mammals.GA' => ['ggs', 'bobs_ggs.relationship_type = \'contacts\' AND `ggs`.`gg`'],
+            'mammals.GA' => ['ggs', '`ggs`.`gg`'],
             'mammals.field_1' => ['bobs', '`bobs`.`field_1`'],
             'mammals.field_2' => ['bobs', '`bobs`.`field_2`'],
             'mammals.field_3' => ['bobs', '`bobs`.`field_3`'],
-            'mammals.field_4' => ['bobs', 'to_char(to_timestamp((`bobs`.`field_4`)::NUMERIC / 1000), \'MMDD\'))', 'to_char(to_timestamp({{value}} / 1000), \'MMDD\')'],
+            'mammals.field_4' => ['bobs', '`bobs`.`field_4`'],
             'mammals.field_5' => ['bobs', '`bobs`.`field_5`'],
             'mammals.field_ts' => ['bobs', '`bobs`.`field_ts`', 'to_timestamp({{value}})'],
         ];
 
+        $overrideMap = [
+            'mammals.GA' =>  [
+                'any' =>  [
+                    'field' => 'bobs_ggs.relationship_type = \'contacts\' AND {{field}}',
+                    'value' =>  [
+                        'null' =>  'is null'
+                    ]
+                ]
+            ],
+            'mammals.field_4' => [
+                'any' => [
+                    'field' => 'to_char(to_timestamp(({{field}})::NUMERIC / 1000), \'MMDD\'))',
+                    // 'operator' =>  'eq', // You can change the operator on the fly if you want.
+                    'value' =>  [
+                        'any' =>  'to_char(to_timestamp({{value}} / 1000), \'MMDD\')',
+                        'null' => 'is null'
+                    ]
+                ]
+            ]
+        ];
+
         $this->jql->setApprovedOperators($whitelist)
             ->setTableMap($tableMap)
-            ->setFieldMap($fieldMap);
+            ->setFieldMap($fieldMap)
+            ->setFieldOverrideMap($overrideMap);
     }
 
     public function testInvalidJson()
