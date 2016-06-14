@@ -26,6 +26,7 @@ class JQLTest extends JQLTestCase
                 'F' => ['eq'],
                 'G' => ['eq'],
                 'GA' => ['eq'],
+                'N' => ['eq', 'ne'],
                 'field_1' => ['eq', 'gt'],
                 'field_2' => ['lt', 'gt', 'eq', 'ne'],
                 'field_3' => ['eq', 'gt', 'in'],
@@ -71,6 +72,7 @@ class JQLTest extends JQLTestCase
             'mammals.F' => ['bobs', '`bobs`.`F`'],
             'mammals.G' => ['ggs', '`ggs`.`gg`'],
             'mammals.GA' => ['ggs', '`ggs`.`gg`'],
+            'mammals.N' => ['bobs', 'bobs.A'],
             'mammals.field_1' => ['bobs', '`bobs`.`field_1`'],
             'mammals.field_2' => ['bobs', '`bobs`.`field_2`'],
             'mammals.field_3' => ['bobs', '`bobs`.`field_3`'],
@@ -91,6 +93,14 @@ class JQLTest extends JQLTestCase
                     'value' =>  [
                         'null' =>  'is null'
                     ]
+                ]
+            ],
+            'mammals.N' => [
+                'eq' => [
+                    'operator' => 'ne'
+                ],
+                'ne' => [
+                    'operator' => 'nin'
                 ]
             ],
             'mammals.field_4' => [
@@ -158,6 +168,13 @@ class JQLTest extends JQLTestCase
         $testData = [uniqid('table') => [uniqid()]];
         $this->jql->setFieldMap($testData);
         $this->assertEquals($testData, $this->jql->getFieldMap());
+    }
+
+    public function testFieldOverrideMapGetter()
+    {
+        $testData = [uniqid('override') => [uniqid()]];
+        $this->jql->setFieldOverrideMap($testData);
+        $this->assertEquals($testData, $this->jql->getFieldOverrideMap());
     }
 
     public function testBaseLinePulse()
@@ -296,6 +313,22 @@ class JQLTest extends JQLTestCase
             "select * from `bobs`"
                 ." where `bobs`.`field_1` > ? or `bobs`.`field_2` > ? or (`bobs`.`field_3` > ? and `bobs`.`D` > ?)"
         );
+    }
+
+    public function testOperatorOverride()
+    {
+        $this->convertToFluentTest(
+            'Eq2Ne.json',
+            "select * from `bobs` where bobs.A != ?"
+        );
+    }
+
+    public function testOperatorOverrideException()
+    {
+        $this->expectException(JQLValidationException::class);
+        $this->expectExceptionMessage('nin: Not allowed');
+        $json = $this->getJson('Ne2NinException.json');
+        $this->jql->convertToFluent($json);
     }
 
     public function testEqNull()

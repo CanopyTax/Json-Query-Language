@@ -190,7 +190,7 @@ class JQL
      */
     private function buildQueryOperation($query, $whery, $modelFieldAlias, $operatorAlias, $value)
     {
-        list($table, $field, $operator) = $this->convertToRealValues($modelFieldAlias, $operatorAlias);
+        list($table, $field, $modelFieldAlias) = $this->convertToRealValues($modelFieldAlias, $operatorAlias);
         $joinType = (is_null($value)) ? 'left' : 'inner';
         list($field, $value, $operator, $bindings) = $this->overrideKeys($modelFieldAlias, $value, $operatorAlias, $field);
         if (!empty($bindings)) {
@@ -376,8 +376,7 @@ class JQL
             throw new JQLException($modelFieldAlias.': Could not find way to join table');
         }
 
-        $operator = $this->operatorMap[$operatorAlias];
-        return [$table, $field, $operator];
+        return [$table, $field, $modelFieldAlias];
     }
 
     /**

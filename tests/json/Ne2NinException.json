@@ -1,0 +1,9 @@
+{
+  "jql": [
+    {
+      "field": "N",
+      "operator": "ne",
+      "value": 4
+    }
+  ]
+}
