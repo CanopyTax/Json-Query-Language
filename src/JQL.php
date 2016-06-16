@@ -17,9 +17,6 @@ class JQL
     protected $mainModel;
 
     /** @var string */
-    protected $mainModelName;
-
-    /** @var string */
     protected $mainModelAlias;
 
     /** @var Builder */
@@ -33,7 +30,7 @@ class JQL
         'gte' => '>=',
         'eq' => '=',
         'ne' => '!=',
-        'beginswith' => 'beginswith',
+        'beginswith' => 'like',
         'between' =>  'between',
         'endswith' => 'endswith',
         'contains' => 'contains',
@@ -193,11 +190,15 @@ class JQL
     {
         list($table, $field, $modelFieldAlias) = $this->convertToRealValues($modelFieldAlias, $operatorAlias);
         $joinType = (is_null($value)) ? 'left' : 'inner';
-        list($field, $value, $operator, $bindings) = $this->overrideKeys($modelFieldAlias, $value, $operatorAlias, $field);
+        list($field, $value, $operatorAlias, $bindings) = $this->overrideKeys($modelFieldAlias, $value, $operatorAlias, $field);
         if (!empty($bindings)) {
             /** @var \Illuminate\Database\Query\Builder $query */
             $query->addBinding($bindings, $whery);
+        } elseif ($operatorAlias === 'beginswith') {
+            // Strings should always be used with beginswith
+            $value .= '%';
         }
+        $operator = $this->operatorMap[$operatorAlias];
 
         $this->joinTableIfNeeded($table, $joinType);
         return $this->individualQuery($query, $whery, $field, $operator, $value);
@@ -263,7 +264,7 @@ class JQL
                 }
             }
         }
-        return [$newField, $newValues, $this->operatorMap[$newOperator], $bindings];
+        return [$newField, $newValues, $newOperator, $bindings];
     }
 
     /**
@@ -351,7 +352,6 @@ class JQL
                         $query->where($field, '>', $value[0]);
                         $query->where($field, '<', $value[1]);
                     });
-
                     return $query;
             }
         }
@@ -417,9 +417,8 @@ class JQL
     {
         $this->mainModel = $mainModel;
         $reflection = new ReflectionClass($mainModel);
-        $this->mainModelName = $reflection->getShortName();
-        $this->query = $mainModel->query();
-        $this->mainModelAlias = is_null($mainModelAlias) ? $this->mainModelName : $mainModelAlias;
+        $this->query = $mainModel->newQueryWithoutScopes();
+        $this->mainModelAlias = is_null($mainModelAlias) ? $reflection->getShortName() : $mainModelAlias;
         $this->joinedTables = [$mainModel->getTable()];
         return $this;
     }
@@ -430,16 +429,6 @@ class JQL
     public function getMainModel()
     {
         return $this->mainModel;
-    }
-
-    /**
-     * Return the name of $this->model.
-     *
-     * @return string
-     */
-    public function getMainModelName()
-    {
-        return $this->mainModelName;
     }
 
     /**

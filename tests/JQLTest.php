@@ -18,7 +18,7 @@ class JQLTest extends JQLTestCase
 
         $whitelist = [
             'mammals' => [
-                'A' => ['eq', 'ne'],
+                'A' => ['eq', 'ne', 'beginswith'],
                 'B' => ['eq', 'in', 'nin'],
                 'C' => ['eq'],
                 'D' => ['eq', 'gt'],
@@ -142,7 +142,6 @@ class JQLTest extends JQLTestCase
         $model = new Mammal();
         $jql = new JQL($model);
         $this->assertEquals($model, $jql->getMainModel());
-        $this->assertEquals('Mammal', $jql->getMainModelName());
         $this->assertEquals('Mammal', $jql->getMainModelAlias());
     }
 
@@ -152,7 +151,6 @@ class JQLTest extends JQLTestCase
         $alias = uniqid();
         $jql = new JQL($model, $alias);
         $this->assertEquals($model, $jql->getMainModel());
-        $this->assertEquals('Mammal', $jql->getMainModelName());
         $this->assertEquals($alias, $jql->getMainModelAlias());
     }
 
@@ -376,6 +374,15 @@ class JQLTest extends JQLTestCase
         $this->convertToFluentTest(
             'NeValue.json',
             "select * from `bobs` where `bobs`.`A` != ?"
+        );
+    }
+
+    public function testBeginsWith()
+    {
+        $this->convertToFluentTest(
+            'BeginsWith.json',
+            "select * from `bobs` where `bobs`.`A` like ?",
+            ['bubbl%']
         );
     }
 
