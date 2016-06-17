@@ -190,6 +190,8 @@ class JQL
     {
         list($table, $field, $modelFieldAlias) = $this->convertToRealValues($modelFieldAlias, $operatorAlias);
         $joinType = (is_null($value)) ? 'left' : 'inner';
+        $originalValue = $value;
+        $originalOperator = $operatorAlias;
         list($field, $value, $operatorAlias, $bindings) = $this->overrideKeys($modelFieldAlias, $value, $operatorAlias, $field);
         if (!empty($bindings)) {
             /** @var \Illuminate\Database\Query\Builder $query */
@@ -201,7 +203,7 @@ class JQL
         $operator = $this->operatorMap[$operatorAlias];
 
         $this->joinTableIfNeeded($table, $joinType);
-        return $this->individualQuery($query, $whery, $field, $operator, $value);
+        return $this->individualQuery($query, $whery, $field, $operator, $value, $originalValue, $originalOperator);
     }
 
     public function overrideKeys($modelFieldAlias, $value, $operatorAlias, $field) {
@@ -320,9 +322,11 @@ class JQL
      * @param string $field
      * @param string $operator
      * @param mixed $value
+     * @param bool $originalValue
+     * @param bool $originalOperator
      * @return Builder
      */
-    private function individualQuery($query, $whery, $field, $operator, $value)
+    private function individualQuery($query, $whery, $field, $operator, $value, $originalValue = false, $originalOperator = false)
     {
         /** @var \Illuminate\Database\Query\Expression $value */
         if (is_null($value) || $value === "is null" || ($value instanceof Expression && $value->getValue() === "is null")) {
@@ -337,6 +341,9 @@ class JQL
                     if (!is_array($value)) {
                         $value = [$value];
                     }
+                    if ($originalOperator == 'eq' && (is_null($originalValue) || $originalValue === "null")) {
+                        $whery .= 'Not';
+                    }
                     $query->{$whery . 'In'}($field, $value);
 
                     return $query;
@@ -344,8 +351,12 @@ class JQL
                     if (!is_array($value)) {
                         $value = [$value];
                     }
-                    $query->{$whery . 'NotIn'}($field, $value);
-
+                    if ($originalOperator == 'ne' && (is_null($originalValue) || $originalValue === "null")) {
+                        $whery = $whery.'In';
+                    } else {
+                        $whery = $whery . 'NotIn';
+                    }
+                    $query->{$whery}($field, $value);
                     return $query;
                 case 'between':
                     $query->$whery(function (Builder $query) use ($field, $value) {
