@@ -305,7 +305,7 @@ class JQLTest extends JQLTestCase
     {
         $this->convertToFluentTest(
             'Between.json',
-            "select * from `bobs` where (to_char(to_timestamp((`bobs`.`field_4`)::NUMERIC / 1000), 'MMDD')) > to_char(to_timestamp(? / 1000), 'MMDD') and to_char(to_timestamp((`bobs`.`field_4`)::NUMERIC / 1000), 'MMDD')) < to_char(to_timestamp(? / 1000), 'MMDD'))",
+            "select * from `bobs` where (to_char(to_timestamp((`bobs`.`field_4`)::NUMERIC / 1000), 'MMDD')) >= to_char(to_timestamp(? / 1000), 'MMDD') and to_char(to_timestamp((`bobs`.`field_4`)::NUMERIC / 1000), 'MMDD')) <= to_char(to_timestamp(? / 1000), 'MMDD'))",
             [1465316562797, 1449878400000]
         );
     }

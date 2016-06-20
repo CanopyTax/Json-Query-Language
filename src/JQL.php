@@ -360,8 +360,8 @@ class JQL
                     return $query;
                 case 'between':
                     $query->$whery(function (Builder $query) use ($field, $value) {
-                        $query->where($field, '>', $value[0]);
-                        $query->where($field, '<', $value[1]);
+                        $query->where($field, '>=', $value[0]);
+                        $query->where($field, '<=', $value[1]);
                     });
                     return $query;
             }
