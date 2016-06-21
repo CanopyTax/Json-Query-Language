@@ -145,6 +145,9 @@ class JQL
                     });
                 } else {
                     // Validate operator is allowed
+                    if (!is_string($item->operator)) {
+                        throw new JQLValidationException("Operator must be a string");
+                    }
                     if (!isset($this->operatorMap[$item->operator]) ||
                         in_array($item->operator, ['endswith', 'contains'])
                     ) {

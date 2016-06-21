@@ -231,6 +231,15 @@ class JQLTest extends JQLTestCase
         $this->jql->convertToFluent($json);
     }
 
+    public function testInvalidFieldOperatorType()
+    {
+        $this->expectException(JQLValidationException::class);
+        $this->expectExceptionMessage('Operator must be a string');
+
+        $json = $this->getJson('invalidFieldOperatorType.json');
+        $this->jql->convertToFluent($json);
+    }
+
     public function testInvalidOperator()
     {
         $this->expectException(JQLValidationException::class);

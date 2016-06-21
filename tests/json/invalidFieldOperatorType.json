@@ -1,0 +1,9 @@
+{
+  "jql": [
+    {
+      "field": "mammals.A",
+      "operator": {},
+      "value": "true"
+    }
+  ]
+}
