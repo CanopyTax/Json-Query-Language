@@ -267,6 +267,10 @@ class JQL
                         $bindings[] = $value;
                     }
                 }
+
+                if (array_key_exists('groupCombiner', $override) && is_array($newValues)) {
+                    $newValues = \DB::raw(implode(' '.$override['groupCombiner'].' ', $newValues));
+                }
             }
         }
         return [$newField, $newValues, $newOperator, $bindings];
