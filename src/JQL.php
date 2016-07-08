@@ -76,7 +76,15 @@ class JQL
      * Mapping of fields and their potential ovveride paterns.
      *
      * //below function is a placeholder, a special todo that would be nice.
-     * ['fieldname' => ['operator' => ['field' =>  'fieldname', 'operator' =>  'newOperator', 'value' =>  'newValue'|funciton(field, operator, value) ]]]
+     * [
+     *   'fieldname' => [
+     *     'operator' => [
+     *       'field' => 'fieldname',
+     *       'operator' => 'newOperator',
+     *       'value' => 'newValue'|funciton(field, operator, value)
+     *     ]
+     *   ]
+     * ]
      */
     protected $fieldOverrideMap = [];
 
@@ -127,21 +135,17 @@ class JQL
     {
         $count = 0;
         foreach ($jql as $item) {
+            $whereName = ($binder != 'OR') ? 'where' : 'orWhere';
             // If "OR" then iterate through and bind them through orWhere's
-            if ($item instanceof stdClass && property_exists($item, 'OR')) {
-                if ($count == 0) {
-                    $this->parseJQL($item->OR, $query, 'OR');
-                } else {
-                    $whery = ($binder != 'OR') ? 'where' : 'orWhere';
-                    $query->$whery(function ($query) use ($item) {
+
+            if (is_array($item)) {
+                $query->$whereName(function ($query) use ($item) {
+                    $this->parseJQL($item, $query);
+                });
+            } elseif ($item instanceof stdClass) {
+                if (property_exists($item, 'OR')) {
+                    $query->$whereName(function ($query) use ($item) {
                         $this->parseJQL($item->OR, $query, 'OR');
-                    });
-                }
-            } else {
-                $whery = ($binder != 'OR') ? 'where' : 'orWhere';
-                if (is_array($item)) {
-                    $query->$whery(function ($query) use ($item) {
-                        $this->parseJQL($item, $query);
                     });
                 } else {
                     // Validate operator is allowed
@@ -156,7 +160,7 @@ class JQL
 
                     $query = $this->buildQueryOperation(
                         $query,
-                        $whery,
+                        $whereName,
                         $item->field,
                         $item->operator,
                         $item->value
@@ -173,7 +177,6 @@ class JQL
             if (!is_object($binding) && !is_null($binding) && $binding != 'null') {
                 $newBindings[] = $binding;
             }
-
         }
         $query->setBindings($newBindings);
 
@@ -182,23 +185,24 @@ class JQL
 
     /**
      * @param Builder $query
-     * @param string $whery
+     * @param string $whereName
      * @param string $modelFieldAlias
      * @param string $operatorAlias
      * @param string|int|bool $value
      * @return Builder
      * @throws JQLValidationException
      */
-    private function buildQueryOperation($query, $whery, $modelFieldAlias, $operatorAlias, $value)
+    private function buildQueryOperation($query, $whereName, $modelFieldAlias, $operatorAlias, $value)
     {
         list($table, $field, $modelFieldAlias) = $this->convertToRealValues($modelFieldAlias, $operatorAlias);
         $joinType = (is_null($value)) ? 'left' : 'inner';
         $originalValue = $value;
         $originalOperator = $operatorAlias;
-        list($field, $value, $operatorAlias, $bindings) = $this->overrideKeys($modelFieldAlias, $value, $operatorAlias, $field);
+        $returnedValues = $this->overrideKeys($modelFieldAlias, $value, $operatorAlias, $field);
+        list($field, $value, $operatorAlias, $bindings) = $returnedValues;
         if (!empty($bindings)) {
             /** @var \Illuminate\Database\Query\Builder $query */
-            $query->addBinding($bindings, $whery);
+            $query->addBinding($bindings, $whereName);
         } elseif ($operatorAlias === 'beginswith') {
             // Strings should always be used with beginswith
             $value .= '%';
@@ -206,17 +210,17 @@ class JQL
         $operator = $this->operatorMap[$operatorAlias];
 
         $this->joinTableIfNeeded($table, $joinType);
-        return $this->individualQuery($query, $whery, $field, $operator, $value, $originalValue, $originalOperator);
+        return $this->individualQuery($query, $whereName, $field, $operator, $value, $originalValue, $originalOperator);
     }
 
-    public function overrideKeys($modelFieldAlias, $value, $operatorAlias, $field) {
+    public function overrideKeys($modelFieldAlias, $value, $operatorAlias, $field)
+    {
         $bindings = [];
         $newField = \DB::raw($field);
         $newOperator = $operatorAlias;
         $newValues = $value;
         if (array_key_exists($modelFieldAlias, $this->fieldOverrideMap)) {
-            if (
-                array_key_exists($overrideOperator = $operatorAlias, $this->fieldOverrideMap[$modelFieldAlias]) ||
+            if (array_key_exists($overrideOperator = $operatorAlias, $this->fieldOverrideMap[$modelFieldAlias]) ||
                 array_key_exists($overrideOperator = 'any', $this->fieldOverrideMap[$modelFieldAlias])
             ) {
                 $override = $this->fieldOverrideMap[$modelFieldAlias][$overrideOperator];
@@ -224,9 +228,13 @@ class JQL
                 // Field
                 if (array_key_exists('field', $override)) {
                     $fieldOverride = $override['field'];
-                    if (
-                        is_array($override['field']) && (
-                            ( !is_array($value) && array_key_exists($key = (is_null($value) ? 'null' : (is_bool($value) ? boolval($value) : $value)), $override['field'])) ||
+                    if (is_array($override['field']) && (
+                            ( !is_array($value) &&
+                                array_key_exists(
+                                    $key = (is_null($value) ? 'null' : (is_bool($value) ? boolval($value) : $value)),
+                                    $override['field']
+                                )
+                            ) ||
                             array_key_exists($key = 'any', $override['field'])
                         )
                     ) {
@@ -237,8 +245,13 @@ class JQL
                             $fieldOverride = preg_replace("/^(?:(.*)\s=\s.*)AND/i", "$1 is null AND", $fieldOverride);
                         }
                     }
-                    $newField = \DB::raw(str_replace('{{field}}', $this->fieldMap[$modelFieldAlias][1], $fieldOverride));
-
+                    $newField = \DB::raw(
+                        str_replace(
+                            '{{field}}',
+                            $this->fieldMap[$modelFieldAlias][1],
+                            $fieldOverride
+                        )
+                    );
                 }
 
                 // Operator
@@ -281,12 +294,12 @@ class JQL
      * @param $value
      * @return array
      */
-    public function replaceValue($override, $value) {
+    public function replaceValue($override, $value)
+    {
         $newValues = \DB::raw(str_replace('{{value}}', '?', $override['value']));
         if (is_array($override['value'])) {
             $value = is_null($value) ? 'null' : $value;
-            if (
-                !is_array($value) &&
+            if (!is_array($value) &&
                 array_key_exists($replacer = strtolower($value), $override['value']) ||
                 array_key_exists($replacer = 'any', $override['value'])
             ) {
@@ -319,13 +332,12 @@ class JQL
                 $this->tableMap[$table][1],
                 $joinType
             );
-
         }
     }
 
     /**
      * @param Builder|\Illuminate\Database\Query\Builder $query
-     * @param string $whery
+     * @param string $whereName
      * @param string $field
      * @param string $operator
      * @param mixed $value
@@ -333,11 +345,21 @@ class JQL
      * @param bool $originalOperator
      * @return Builder
      */
-    private function individualQuery($query, $whery, $field, $operator, $value, $originalValue = false, $originalOperator = false)
-    {
+    private function individualQuery(
+        $query,
+        $whereName,
+        $field,
+        $operator,
+        $value,
+        $originalValue = false,
+        $originalOperator = false
+    ) {
         /** @var \Illuminate\Database\Query\Expression $value */
-        if (is_null($value) || $value === "is null" || ($value instanceof Expression && $value->getValue() === "is null")) {
-            $boolean = $whery == 'orWhere' ? 'or' : 'and';
+        if (is_null($value) ||
+            $value === "is null" ||
+            ($value instanceof Expression && $value->getValue() === "is null")
+        ) {
+            $boolean = $whereName == 'orWhere' ? 'or' : 'and';
             if (in_array($operator, ['in', 'nin'])) {
                 $operator = ($operator === 'in') ? '=' : '!=';
             }
@@ -349,9 +371,9 @@ class JQL
                         $value = [$value];
                     }
                     if ($originalOperator == 'eq' && (is_null($originalValue) || $originalValue === "null")) {
-                        $whery .= 'Not';
+                        $whereName .= 'Not';
                     }
-                    $query->{$whery . 'In'}($field, $value);
+                    $query->{$whereName . 'In'}($field, $value);
 
                     return $query;
                 case 'not in':
@@ -359,14 +381,14 @@ class JQL
                         $value = [$value];
                     }
                     if ($originalOperator == 'ne' && (is_null($originalValue) || $originalValue === "null")) {
-                        $whery = $whery.'In';
+                        $whereName = $whereName.'In';
                     } else {
-                        $whery = $whery . 'NotIn';
+                        $whereName = $whereName . 'NotIn';
                     }
-                    $query->{$whery}($field, $value);
+                    $query->{$whereName}($field, $value);
                     return $query;
                 case 'between':
-                    $query->$whery(function (Builder $query) use ($field, $value) {
+                    $query->$whereName(function (Builder $query) use ($field, $value) {
                         $query->where($field, '>=', $value[0]);
                         $query->where($field, '<=', $value[1]);
                     });
@@ -378,7 +400,7 @@ class JQL
             $value = ($value) ? 'true' : 'false';
         }
 
-        return $query->$whery($field, $operator, $value);
+        return $query->$whereName($field, $operator, $value);
     }
 
     /**
