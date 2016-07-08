@@ -127,11 +127,11 @@ class JQL
     {
         $count = 0;
         foreach ($jql as $item) {
-            $whery = ($binder != 'OR') ? 'where' : 'orWhere';
+            $whereName = ($binder != 'OR') ? 'where' : 'orWhere';
             // If "OR" then iterate through and bind them through orWhere's
 
             if (is_array($item)) {
-                $query->$whery(function ($query) use ($item) {
+                $query->$whereName(function ($query) use ($item) {
                     $this->parseJQL($item, $query);
                 });
             } elseif ($item instanceof stdClass) {
@@ -139,7 +139,7 @@ class JQL
                     if ($count == 0) {
                         $this->parseJQL($item->OR, $query, 'OR');
                     } else {
-                        $query->$whery(function ($query) use ($item) {
+                        $query->$whereName(function ($query) use ($item) {
                             $this->parseJQL($item->OR, $query, 'OR');
                         });
                     }
@@ -156,7 +156,7 @@ class JQL
 
                     $query = $this->buildQueryOperation(
                         $query,
-                        $whery,
+                        $whereName,
                         $item->field,
                         $item->operator,
                         $item->value
@@ -182,14 +182,14 @@ class JQL
 
     /**
      * @param Builder $query
-     * @param string $whery
+     * @param string $whereName
      * @param string $modelFieldAlias
      * @param string $operatorAlias
      * @param string|int|bool $value
      * @return Builder
      * @throws JQLValidationException
      */
-    private function buildQueryOperation($query, $whery, $modelFieldAlias, $operatorAlias, $value)
+    private function buildQueryOperation($query, $whereName, $modelFieldAlias, $operatorAlias, $value)
     {
         list($table, $field, $modelFieldAlias) = $this->convertToRealValues($modelFieldAlias, $operatorAlias);
         $joinType = (is_null($value)) ? 'left' : 'inner';
@@ -198,7 +198,7 @@ class JQL
         list($field, $value, $operatorAlias, $bindings) = $this->overrideKeys($modelFieldAlias, $value, $operatorAlias, $field);
         if (!empty($bindings)) {
             /** @var \Illuminate\Database\Query\Builder $query */
-            $query->addBinding($bindings, $whery);
+            $query->addBinding($bindings, $whereName);
         } elseif ($operatorAlias === 'beginswith') {
             // Strings should always be used with beginswith
             $value .= '%';
@@ -206,7 +206,7 @@ class JQL
         $operator = $this->operatorMap[$operatorAlias];
 
         $this->joinTableIfNeeded($table, $joinType);
-        return $this->individualQuery($query, $whery, $field, $operator, $value, $originalValue, $originalOperator);
+        return $this->individualQuery($query, $whereName, $field, $operator, $value, $originalValue, $originalOperator);
     }
 
     public function overrideKeys($modelFieldAlias, $value, $operatorAlias, $field) {
@@ -325,7 +325,7 @@ class JQL
 
     /**
      * @param Builder|\Illuminate\Database\Query\Builder $query
-     * @param string $whery
+     * @param string $whereName
      * @param string $field
      * @param string $operator
      * @param mixed $value
@@ -333,11 +333,11 @@ class JQL
      * @param bool $originalOperator
      * @return Builder
      */
-    private function individualQuery($query, $whery, $field, $operator, $value, $originalValue = false, $originalOperator = false)
+    private function individualQuery($query, $whereName, $field, $operator, $value, $originalValue = false, $originalOperator = false)
     {
         /** @var \Illuminate\Database\Query\Expression $value */
         if (is_null($value) || $value === "is null" || ($value instanceof Expression && $value->getValue() === "is null")) {
-            $boolean = $whery == 'orWhere' ? 'or' : 'and';
+            $boolean = $whereName == 'orWhere' ? 'or' : 'and';
             if (in_array($operator, ['in', 'nin'])) {
                 $operator = ($operator === 'in') ? '=' : '!=';
             }
@@ -349,9 +349,9 @@ class JQL
                         $value = [$value];
                     }
                     if ($originalOperator == 'eq' && (is_null($originalValue) || $originalValue === "null")) {
-                        $whery .= 'Not';
+                        $whereName .= 'Not';
                     }
-                    $query->{$whery . 'In'}($field, $value);
+                    $query->{$whereName . 'In'}($field, $value);
 
                     return $query;
                 case 'not in':
@@ -359,14 +359,14 @@ class JQL
                         $value = [$value];
                     }
                     if ($originalOperator == 'ne' && (is_null($originalValue) || $originalValue === "null")) {
-                        $whery = $whery.'In';
+                        $whereName = $whereName.'In';
                     } else {
-                        $whery = $whery . 'NotIn';
+                        $whereName = $whereName . 'NotIn';
                     }
-                    $query->{$whery}($field, $value);
+                    $query->{$whereName}($field, $value);
                     return $query;
                 case 'between':
-                    $query->$whery(function (Builder $query) use ($field, $value) {
+                    $query->$whereName(function (Builder $query) use ($field, $value) {
                         $query->where($field, '>=', $value[0]);
                         $query->where($field, '<=', $value[1]);
                     });
@@ -378,7 +378,7 @@ class JQL
             $value = ($value) ? 'true' : 'false';
         }
 
-        return $query->$whery($field, $operator, $value);
+        return $query->$whereName($field, $operator, $value);
     }
 
     /**
