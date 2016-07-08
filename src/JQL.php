@@ -135,15 +135,17 @@ class JQL
     {
         $count = 0;
         foreach ($jql as $item) {
-            $whereName = ($binder != 'OR') ? 'where' : 'orWhere';
             // If "OR" then iterate through and bind them through orWhere's
+            $whereName = ($binder != 'OR') ? 'where' : 'orWhere';
 
             if (is_array($item)) {
+                // Parse the group as "AND"
                 $query->$whereName(function ($query) use ($item) {
                     $this->parseJQL($item, $query);
                 });
             } elseif ($item instanceof stdClass) {
                 if (property_exists($item, 'OR')) {
+                    // Parse the group as "OR"
                     $query->$whereName(function ($query) use ($item) {
                         $this->parseJQL($item->OR, $query, 'OR');
                     });
