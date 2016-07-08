@@ -127,22 +127,22 @@ class JQL
     {
         $count = 0;
         foreach ($jql as $item) {
+            $whery = ($binder != 'OR') ? 'where' : 'orWhere';
             // If "OR" then iterate through and bind them through orWhere's
-            if ($item instanceof stdClass && property_exists($item, 'OR')) {
-                if ($count == 0) {
-                    $this->parseJQL($item->OR, $query, 'OR');
-                } else {
-                    $whery = ($binder != 'OR') ? 'where' : 'orWhere';
-                    $query->$whery(function ($query) use ($item) {
+
+            if (is_array($item)) {
+                $query->$whery(function ($query) use ($item) {
+                    $this->parseJQL($item, $query);
+                });
+            } elseif ($item instanceof stdClass) {
+                if (property_exists($item, 'OR')) {
+                    if ($count == 0) {
                         $this->parseJQL($item->OR, $query, 'OR');
-                    });
-                }
-            } else {
-                $whery = ($binder != 'OR') ? 'where' : 'orWhere';
-                if (is_array($item)) {
-                    $query->$whery(function ($query) use ($item) {
-                        $this->parseJQL($item, $query);
-                    });
+                    } else {
+                        $query->$whery(function ($query) use ($item) {
+                            $this->parseJQL($item->OR, $query, 'OR');
+                        });
+                    }
                 } else {
                     // Validate operator is allowed
                     if (!is_string($item->operator)) {
