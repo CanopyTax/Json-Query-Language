@@ -324,7 +324,7 @@ class JQLTest extends JQLTestCase
  //P == parentheses.
         $this->convertToFluentTest(
             'Aor-BandC.json',
-            "select * from `bobs` where `bobs`.`field_1` > ? or (`bobs`.`field_2` > ? and `bobs`.`field_3` > ?)"
+            "select * from `bobs` where (`bobs`.`field_1` > ? or (`bobs`.`field_2` > ? and `bobs`.`field_3` > ?))"
         );
     }
 
@@ -342,7 +342,7 @@ class JQLTest extends JQLTestCase
         $this->convertToFluentTest(
             'Aor-Bor-CandD.json',
             "select * from `bobs`"
-                ." where `bobs`.`field_1` > ? or `bobs`.`field_2` > ? or (`bobs`.`field_3` > ? and `bobs`.`D` > ?)"
+                ." where (`bobs`.`field_1` > ? or `bobs`.`field_2` > ? or (`bobs`.`field_3` > ? and `bobs`.`D` > ?))"
         );
     }
 

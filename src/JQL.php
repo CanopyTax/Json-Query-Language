@@ -144,13 +144,9 @@ class JQL
                 });
             } elseif ($item instanceof stdClass) {
                 if (property_exists($item, 'OR')) {
-                    if ($count == 0) {
+                    $query->$whereName(function ($query) use ($item) {
                         $this->parseJQL($item->OR, $query, 'OR');
-                    } else {
-                        $query->$whereName(function ($query) use ($item) {
-                            $this->parseJQL($item->OR, $query, 'OR');
-                        });
-                    }
+                    });
                 } else {
                     // Validate operator is allowed
                     if (!is_string($item->operator)) {
