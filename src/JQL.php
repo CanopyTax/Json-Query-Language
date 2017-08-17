@@ -207,7 +207,7 @@ class JQL
             $query->addBinding($bindings, $whereName);
         } elseif ($operatorAlias === 'beginswith') {
             // Strings should always be used with beginswith
-            $value .= '%';
+            $value = addcslashes($value, '%_').'%';
         }
         $operator = $this->operatorMap[$operatorAlias];
 
